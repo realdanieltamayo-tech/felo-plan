@@ -11,3 +11,4 @@ Format: date · idea in Daniel's words (short) · where it probably fits · stat
 | 2026-09-24 | Pilot: website for a friend selling oil, energy & mining equipment | PRJ-03 | Planned |
 | 2026-09-24 | Felo proposes improvements to itself through the Deploy queue | PRJ-07 | Idea |
 | 2026-09-24 | SSH keys instead of the root password for the terminal login (laptop in the car + home work PC; one key each, then passwords off). fail2ban covers guessing for now | PRJ-01 (optional) | Idea |
+| 2026-09-24 | tyx production server (Hostinger VPS 168.231.66.195, also holds core's restic store /opt/felo-restic) allows root SSH with a password from the whole internet and has no fail2ban. Harden (fail2ban + keys) — needs Daniel's OK, tyx is 'read, never change' | Security (new item) | Found, not started |
