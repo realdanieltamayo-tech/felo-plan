@@ -6,7 +6,7 @@ Ideas Daniel pitches go to `IDEAS.md` — they are not worked on until they beco
 | ID | Project | Status | Active phase |
 |---|---|---|---|
 | PRJ-00 | Move from v1 to v2 + memory upgrade | **Done** (memory deploys waiting on Daniel's tap) | — |
-| PRJ-01 | Platform safety & reliability | **Active** | 1.2 (waiting for Daniel's go) |
+| PRJ-01 | Platform safety & reliability | **Active** | 1.2 |
 | PRJ-02 | Build Studio — the Developer department | Planned | — |
 | PRJ-03 | Pilot client: oil, energy & mining equipment website | Planned (built with PRJ-02) | — |
 | PRJ-04 | Separate departments into dedicated agents | Planned | — |
@@ -22,7 +22,13 @@ Order: PRJ-01 → PRJ-02 (PRJ-03 is its pilot) → PRJ-04 → PRJ-05 → PRJ-06 
 ## PRJ-01 Platform safety & reliability
 Why first: professional clients will trust Felo with their data.
 - **1.1 Lock down** — **done 2026-09-24.** Handoff: `handoffs/2026-09-24-PRJ-01-1.1-lock-down.md`.
-- **1.2 Off-site & recovery** — v2 code to GitHub (repo `felo-codex-preview`/`felo-v2`, Daniel creates it); off-site database backup; one test restore.
+- **1.2 Off-site & recovery** — *in progress (started 2026-09-24)*
+  - [x] Codex snapshot preserved as tag `archive-codex-snapshot-2026-09-24` in `/root/git/felo-v2.git` (was only in a temp folder).
+  - [x] Keys made: GitHub deploy keys on CT100 (`~/.ssh/felo_v2_github`, `~/.ssh/felo_plan_github`, one repo each, write); off-site key on the Proxmox host (`/root/.ssh/felo_offsite_backup`).
+  - [ ] Daniel creates private GitHub repos `felo-v2` and `felo-plan` and adds the deploy keys → automatic mirror after every push/deploy.
+  - [ ] Off-site: encrypted restic copy (daily DB dump + settings + plan + git repos) to the Hostinger VPS in Boston (where core's restic already lives), in its own restricted account — never touching core's backups. Needs the VPS address + Daniel adding the public key in the Hostinger panel.
+  - [ ] Backup password shown to Daniel on the Proxmox shell to store in his password manager (backups are useless without it).
+  - [ ] Test restore: from the off-site copy into a throwaway database + trial app; compare with live.
 - **1.3 Reliability** — optional: self-hosted alert server with a login instead of public ntfy.sh (lead alerts contain names and emails); chat backup brain when the work PC is off (needs Daniel's privacy decision); phone alert when a server on the Servers page goes down; put box 101 services (Gemma worker, supervisor, bridge) in git.
 - **1.4 Clean up** — clear/archive the 7 waiting test projects; remove the 7 old stopped `felo-codex-preview-pre-*` containers (hold old settings); remove v1 leftovers after 2026-10-24.
 
