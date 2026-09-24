@@ -25,12 +25,15 @@ Why first: professional clients will trust Felo with their data.
   - [x] Box 101 Hermes bridge (port 8000, no password, root, office Wi-Fi) switched off — unused since 2026-09-11.
   - [x] Box 100 git daemon (port 9418, anyone on Wi-Fi/Tailscale could read AND push every repo) switched off — nothing used it.
   - [x] Proxmox host rpcbind (port 111, open on Wi-Fi) switched off — no network file sharing in use.
-  - [x] Only the deployer can move v2 `master`/`deployed` (pre-receive hook, tested). Repo copy of the deployer waiting for Deploy tap (branch `deployer-identity`).
+  - [x] Only the deployer can move v2 `master`/`deployed` (pre-receive hook, tested). Deployed by Daniel (92fdba0).
   - [x] Calendar-suggestion phone alerts switched on (`/root/felo-v2-notify.py`, cron).
-  - [ ] New private alert channel: prepared on box 100 (`/root/felo-v2-runtime/ntfy.env`); Daniel runs `felo-alerts-qr` on the Proxmox shell and subscribes → test alert → switch intake + watcher + notifier to it.
+  - [x] New private alert channel: Daniel subscribed, test alert received; lead service, deploy watcher and calendar notifier switched to `/root/felo-v2-runtime/ntfy.env`; old channel removed from the retired v1 settings. Repo copies waiting for Deploy tap (002c069).
   - [ ] Nextcloud app password: Daniel creates a new one (needs core online) → `felo-set-secret nextcloud` → Claude applies + verifies → Daniel deletes the old one.
-  - [ ] Google client secret: Daniel adds a new secret in Google Cloud Console → `felo-set-secret gmail-secret` → Claude applies + verifies Gmail → Daniel disables the old secret (this also makes the leaked v1 refresh token useless).
+  - [x] Google client secret: new secret added by Daniel (client "Felo Assistant Agent Web", project 968092909560), accepted by Google, applied to v2 with a safe restart.
+  - [ ] Daniel disables the OLD Google secret → Claude confirms Google rejects it (this also kills v1's leaked refresh token — v1 used the same client).
   - [ ] Decision: the Proxmox host allows root SSH login with a password from the office Wi-Fi — switch to key-only? (Daniel: how do you log in today?)
+  - Found: Gmail was never connected in v2 (no saved sign-in). Connecting it = one click on /email (read-only). Not part of 1.1; the meetings-from-email check has nothing to read until then.
+  - Note: core is on Wi-Fi (the only machine not on ethernet); Daniel moves it to ethernet 2026-09-24 afternoon.
   - Note: core went offline 2026-09-24 15:30 UTC (felostudio.com, cloud, office = Cloudflare 530). Not caused by this phase (first change 15:31:28). Log: `/root/felo-plan-lockdown-*.log` on the Proxmox host.
 - **1.2 Off-site & recovery** — v2 code to GitHub (repo `felo-codex-preview`/`felo-v2`, Daniel creates it); off-site database backup; one test restore.
 - **1.3 Reliability** — optional: self-hosted alert server with a login instead of public ntfy.sh (lead alerts contain names and emails); chat backup brain when the work PC is off (needs Daniel's privacy decision); phone alert when a server on the Servers page goes down; put box 101 services (Gemma worker, supervisor, bridge) in git.
