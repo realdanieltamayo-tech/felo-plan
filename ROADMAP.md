@@ -12,10 +12,11 @@ Published page (diagram): https://claude.ai/artifact/A83xso7kLPuiFB4pjMbWXQ — 
 
 ## Standing decisions
 - Nothing goes live without Daniel's Deploy tap; ideas are saved, not built, until scheduled.
-- Client work runs on Daniel's own servers; the Felo server (Proxmox CT100/CT101) is only for Felo.
+- All servers are Daniel's. Client sites are hosted separately from Felo's own boxes (CT100/CT101) so one client's problem can never touch Felo or another client. Which machine hosts them: open decision.
 - Code and design roles may use a cloud model (Claude API); email/CRM/finance stay local unless Daniel decides otherwise. *(Budget cap: pending Daniel.)*
 
 ## Open decisions for Daniel
+0. Which machine hosts client sites: new container on the Felo Proxmox host, core, felo-node-1/2, or other?
 1. Monthly Claude API cap (suggested start: US$100/month hard limit, raise with the first paying client).
 2. May Felo use Claude as a backup chat brain when the work PC is off?
 3. Gmail reply drafts (wider Gmail permission)?
