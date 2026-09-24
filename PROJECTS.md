@@ -6,7 +6,7 @@ Ideas Daniel pitches go to `IDEAS.md` — they are not worked on until they beco
 | ID | Project | Status | Active phase |
 |---|---|---|---|
 | PRJ-00 | Move from v1 to v2 + memory upgrade | **Done** (memory deploys waiting on Daniel's tap) | — |
-| PRJ-01 | Platform safety & reliability | **Next** | 1.1 |
+| PRJ-01 | Platform safety & reliability | **Active** | 1.1 |
 | PRJ-02 | Build Studio — the Developer department | Planned | — |
 | PRJ-03 | Pilot client: oil, energy & mining equipment website | Planned (built with PRJ-02) | — |
 | PRJ-04 | Separate departments into dedicated agents | Planned | — |
@@ -21,9 +21,19 @@ Order: PRJ-01 → PRJ-02 (PRJ-03 is its pilot) → PRJ-04 → PRJ-05 → PRJ-06 
 
 ## PRJ-01 Platform safety & reliability
 Why first: professional clients will trust Felo with their data.
-- **1.1 Lock down** — close the box 101 bridge (port 8000, open on the LAN, runs Hermes with safety prompts off as root); change the secrets printed on 2026-09-24 (Nextcloud password, Gmail client secret + refresh token, ntfy topic, old v1 API token/DB password); switch on calendar-suggestion phone alerts (`/root/felo-v2-notify.py` cron).
+- **1.1 Lock down** — *in progress (started 2026-09-24)*
+  - [x] Box 101 Hermes bridge (port 8000, no password, root, office Wi-Fi) switched off — unused since 2026-09-11.
+  - [x] Box 100 git daemon (port 9418, anyone on Wi-Fi/Tailscale could read AND push every repo) switched off — nothing used it.
+  - [x] Proxmox host rpcbind (port 111, open on Wi-Fi) switched off — no network file sharing in use.
+  - [x] Only the deployer can move v2 `master`/`deployed` (pre-receive hook, tested). Repo copy of the deployer waiting for Deploy tap (branch `deployer-identity`).
+  - [x] Calendar-suggestion phone alerts switched on (`/root/felo-v2-notify.py`, cron).
+  - [ ] New private alert channel: prepared on box 100 (`/root/felo-v2-runtime/ntfy.env`); Daniel runs `felo-alerts-qr` on the Proxmox shell and subscribes → test alert → switch intake + watcher + notifier to it.
+  - [ ] Nextcloud app password: Daniel creates a new one (needs core online) → `felo-set-secret nextcloud` → Claude applies + verifies → Daniel deletes the old one.
+  - [ ] Google client secret: Daniel adds a new secret in Google Cloud Console → `felo-set-secret gmail-secret` → Claude applies + verifies Gmail → Daniel disables the old secret (this also makes the leaked v1 refresh token useless).
+  - [ ] Decision: the Proxmox host allows root SSH login with a password from the office Wi-Fi — switch to key-only? (Daniel: how do you log in today?)
+  - Note: core went offline 2026-09-24 15:30 UTC (felostudio.com, cloud, office = Cloudflare 530). Not caused by this phase (first change 15:31:28). Log: `/root/felo-plan-lockdown-*.log` on the Proxmox host.
 - **1.2 Off-site & recovery** — v2 code to GitHub (repo `felo-codex-preview`/`felo-v2`, Daniel creates it); off-site database backup; one test restore.
-- **1.3 Reliability** — chat backup brain when the work PC is off (needs Daniel's privacy decision); phone alert when a server on the Servers page goes down; put box 101 services (Gemma worker, supervisor, bridge) in git.
+- **1.3 Reliability** — optional: self-hosted alert server with a login instead of public ntfy.sh (lead alerts contain names and emails); chat backup brain when the work PC is off (needs Daniel's privacy decision); phone alert when a server on the Servers page goes down; put box 101 services (Gemma worker, supervisor, bridge) in git.
 - **1.4 Clean up** — clear/archive the 7 waiting test projects; remove v1 leftovers after 2026-10-24.
 
 ## PRJ-02 Build Studio — the Developer department
