@@ -12,7 +12,7 @@ Rule: one step at a time; each step ends with something Daniel can see and use; 
 - Anthropic **API key** (Daniel's Console account, prepaid credits, monthly limit), not the subscription login. Old login kept only in CT101 `/root/.hermes/.env.before-api-key-*`.
 - Model **claude-opus-5-5** (the strongest for complex coding/multi-step jobs; ~2x Sonnet price), `reasoning_effort: high`. Backups: `config.yaml.before-opus-*`.
 - Local fix in Hermes: Opus 5.5 added to `_MANDATORY_THINKING_CLAUDE_SUBSTRINGS` (agent/anthropic_adapter.py; backup `/root/.hermes/anthropic_adapter.py.before-opus-*`). **Re-apply after any Hermes update.**
-- Waiting on: Daniel buys credits (key works; balance was 0), then test Hermes answers as Felo.
+- Working 2026-09-24: Hermes answers on claude-opus-5-5 via the API key (9 s, ~18k input tokens per message ≈ 7 cents before caching). Still introduces itself as "Hermes Agent by Nous Research" → fix in step 4. Base prompt size → trim in step 6. Note: the $100 Claude app credit does not apply to the API.
 - Later (step 7): heavy coding through Claude Code itself, which may use Daniel's Claude subscription legitimately (it is Anthropic's own app).
 
 ## Order of work for steps 2–3 (one sub-step at a time, each visible)
