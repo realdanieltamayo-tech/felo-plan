@@ -16,3 +16,4 @@ Format: date · idea in Daniel's words (short) · where it probably fits · stat
 | 2026-09-24 | tyx, Postiz and Temporal still run on the Hostinger VPS although tyx is retired. Shutting them down would shrink the attack surface next to the backups and free resources | Clean-up (after Daniel decides) | Idea |
 | 2026-09-24 | Build Studio models: backend coding with Claude Code, frontend and images with Codex (Daniel believes Codex is best at that) | PRJ-02 · 2.2 | Decided |
 | 2026-09-24 | Assistant brain stays Gemma; no Claude backup brain for chat | PRJ-01 · 1.3 | Decided |
+| 2026-09-24 | Back up the Windows Codex bridge (code, settings, task) off-site too — today only a same-disk copy on the work PC | PRJ-01 1.3 or PRJ-02 | Idea |
