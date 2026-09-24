@@ -3,8 +3,17 @@
 Published page: https://claude.ai/artifact/A83xso7kLPuiFB4pjMbWXQ (keep in step with this file).
 Rule: one step at a time; each step ends with something Daniel can see and use; handoff after each.
 
-## First decision (blocks steps 2–8)
-There are two Felos: **Hermes** (box 101: SOUL, memory, 61 skills, tools, Telegram, Claude brain) and **Felo v2** (the Codex-built app: its own chat, Gemma brain, memory, tools, screens). Daniel's list names Hermes as the harness. Proposal: Hermes = the one assistant (steps 2–8); Felo v2 = the screens (step 9) + business apps Hermes uses as tools (CRM, leads, calendar, deploy approvals). **Status: waiting for Daniel's confirmation.**
+## Decided 2026-09-24 (Daniel)
+- **Hermes is the only assistant and the boss of the other agents.** Felo v2 becomes the screens (step 9) + business tools Hermes uses (CRM, leads, calendar, deploy approvals). Both boxes stay.
+- **Brain = Claude** (replaces "assistant = Gemma"). Hermes already signs in with Daniel's Claude subscription (not pay-per-use). Coding: Claude Code (backend), Codex (frontend + images).
+- The link: Hermes' built-in API server (key-protected; chat, sessions, runs with approvals, skills, toolsets), locked so only box 100 can reach it.
+
+## Order of work for steps 2–3 (one sub-step at a time, each visible)
+- 2.1 Turn on Hermes' API server, locked to box 100 with a key → Servers page shows Hermes (Claude) answering.
+- 2.2 Felo's chat screen talks to Hermes → the same Felo on the screen and on Telegram.
+- 2.3 Hermes gets Felo's tools (CRM, leads, calendar, email, memory, files, projects).
+- 2.4 One identity + one memory (steps 4–5).
+- 2.5 Hermes delegates: backend to Claude Code, frontend/images to Codex (step 7).
 
 ## 1. Home — the server
 Made: Proxmox (Dell) with CT100 (Felo v2, DB, lead intake) and CT101 (Hermes, builder); work PC runs Gemma + Codex bridge; lock-down done (PRJ-01 1.1); nightly encrypted off-site backups, GitHub mirror, tested restore (1.2).
@@ -15,8 +24,8 @@ Made: Hermes running on CT101, Telegram gateway, built-in skills/memory/cron/kan
 To do: confirm Hermes as the one harness; locked connection v2 ⇄ Hermes (old bridge was open and is off); v2 chat goes through Hermes.
 
 ## 3. Brain
-Decided: assistant = Gemma (local); backend coding = Claude Code; frontend + images = Codex (bridge exists on Daniel's subscription).
-To do: switch Hermes from Claude Sonnet (pay-per-use) to Gemma; consider a bigger Gemma that fits 12 GB; monthly cap for any cloud AI.
+Decided: brain = Claude (Hermes, Daniel's subscription); backend coding = Claude Code; frontend + images = Codex (bridge exists on Daniel's subscription). Gemma stays only for small local jobs if useful.
+To do: model choice inside Claude (everyday vs hard tasks); watch subscription limits.
 
 ## 4. Who it is
 Made: Hermes SOUL.md (2 KB, mostly safety); 74 facts in v2 memory; Felo Studio voice/design rules as memories.
