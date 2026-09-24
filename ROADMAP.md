@@ -8,8 +8,11 @@ Rule: one step at a time; each step ends with something Daniel can see and use; 
 - **Brain = Claude** (replaces "assistant = Gemma"). Hermes already signs in with Daniel's Claude subscription (not pay-per-use). Coding: Claude Code (backend), Codex (frontend + images).
 - The link: Hermes' built-in API server (key-protected; chat, sessions, runs with approvals, skills, toolsets), locked so only box 100 can reach it.
 
+## Keep in mind — how Hermes uses Claude
+Hermes signs in with Daniel's Claude **subscription** login and, to do that, tells Claude "You are Claude Code, Anthropic's official CLI" before every request (agent/anthropic_adapter.py). So Hermes first answered "I'm Claude Code". Subscription logins are meant for Anthropic's own apps (Claude, Claude Code); powering another always-on agent with one may not be allowed and can stop working without notice. The officially supported option is an Anthropic **API key** (pay per use, with a monthly spend limit). **Decision for Daniel.**
+
 ## Order of work for steps 2–3 (one sub-step at a time, each visible)
-- 2.1 Turn on Hermes' API server, locked to box 100 with a key → Servers page shows Hermes (Claude) answering.
+- 2.1 Turn on Hermes' API server — **done 2026-09-24.** Port 8642 on CT101, key in CT101 `/root/.hermes/.env` (API_SERVER_*) and CT100 `/root/felo-v2-runtime/hermes.env`; firewall `felo-hermes-api-guard` (systemd) drops 8642 from everything except box 100 (100.81.117.27). Tested: answers with key in ~7 s; no key / wrong key = 401; Wi-Fi and other Tailscale devices blocked; Telegram reconnected. Settings backup: CT101 `/root/.hermes/.env.before-api-server-*`. (Servers page still points at the old dead address — fixed in 2.2.)
 - 2.2 Felo's chat screen talks to Hermes → the same Felo on the screen and on Telegram.
 - 2.3 Hermes gets Felo's tools (CRM, leads, calendar, email, memory, files, projects).
 - 2.4 One identity + one memory (steps 4–5).
