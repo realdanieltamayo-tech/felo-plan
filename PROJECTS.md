@@ -23,13 +23,13 @@ Order: PRJ-01 → PRJ-02 (PRJ-03 is its pilot) → PRJ-04 → PRJ-05 → PRJ-06 
 Why first: professional clients will trust Felo with their data.
 - **1.1 Lock down** — **done 2026-09-24.** Handoff: `handoffs/2026-09-24-PRJ-01-1.1-lock-down.md`.
 - **1.2 Off-site & recovery** — **done 2026-09-24.** Handoff: `handoffs/2026-09-24-PRJ-01-1.2-offsite-recovery.md`.
-- **1.3 Reliability** — put box 101 code (Gemma worker, supervisor, gateway, bridge) into git — today it is only in the off-site backups; optional: self-hosted alert server with a login instead of public ntfy.sh (lead alerts contain names and emails); chat backup brain when the work PC is off (needs Daniel's privacy decision); phone alert when a server on the Servers page goes down; put box 101 services (Gemma worker, supervisor, bridge) in git.
+- **1.3 Reliability** — put box 101 code (Gemma worker, supervisor, gateway, bridge) into git — today it is only in the off-site backups; phone alert when a service on the Servers page goes down; optional: self-hosted alert server with a login instead of public ntfy.sh (lead alerts contain names and emails). *Decided 2026-09-24: the assistant brain stays on Gemma — no Claude backup brain. When the work PC is off, chat is down; the Servers page and the down-alert make that visible.*
 - **1.4 Clean up** — clear/archive the 7 waiting test projects; remove the 7 old stopped `felo-codex-preview-pre-*` containers (hold old settings); remove v1 leftovers after 2026-10-24.
 
 ## PRJ-02 Build Studio — the Developer department
 Goal: websites and software good enough for professional clients, proven before Daniel sees them.
 - **2.1 Foundations** — standard stack; Felo design system (tokens, fonts, polished page sections); spec template (pages, features, acceptance per page); reference-site intake; per-project workspace isolation.
-- **2.2 The team** — separate agents: Architect (spec), Designer, Frontend dev, Backend dev on a top cloud model (Claude API); each with its own instructions, tools and project memory.
+- **2.2 The team** — separate agents, each with its own instructions, tools and project memory. **Decided by Daniel 2026-09-24: backend coding = Claude Code; frontend and images = Codex.** Architect/spec and QA roles still to assign (propose when 2.2 starts).
 - **2.3 QA reviewer** — real browser screenshots at phone/tablet/desktop, performance/accessibility/SEO scores with minimums, tests + key flows, compare with references; failures go back to the developer automatically before Daniel sees anything.
 - **2.4 Delivery** — private client preview link; Daniel approves; **push the finished project to its hosting place on Daniel's servers** (all servers are Daniel's; client sites get their own container/machine, separate from Felo's own boxes 100/101 — which machine is still to decide) with rollback.
 - **2.5 Measure** — rounds to approval, quality scores, cost per project; tune.

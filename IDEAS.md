@@ -14,3 +14,5 @@ Format: date · idea in Daniel's words (short) · where it probably fits · stat
 | 2026-09-24 | tyx production server (Hostinger VPS 168.231.66.195, also holds core's restic store /opt/felo-restic) allows root SSH with a password from the whole internet and has no fail2ban. Harden (fail2ban + keys) — needs Daniel's OK, tyx is 'read, never change' | Security (new item) | Found, not started |
 | 2026-09-24 | tyx is a failed product (Daniel's words). Later: build a new, better real-estate/CRM product on Daniel's own servers instead of tyx | New product (future project) | Idea - not scheduled |
 | 2026-09-24 | tyx, Postiz and Temporal still run on the Hostinger VPS although tyx is retired. Shutting them down would shrink the attack surface next to the backups and free resources | Clean-up (after Daniel decides) | Idea |
+| 2026-09-24 | Build Studio models: backend coding with Claude Code, frontend and images with Codex (Daniel believes Codex is best at that) | PRJ-02 · 2.2 | Decided |
+| 2026-09-24 | Assistant brain stays Gemma; no Claude backup brain for chat | PRJ-01 · 1.3 | Decided |
