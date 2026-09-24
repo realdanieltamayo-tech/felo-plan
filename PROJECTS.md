@@ -30,9 +30,9 @@ Why first: professional clients will trust Felo with their data.
   - [x] New private alert channel: Daniel subscribed, test alert received; lead service, deploy watcher and calendar notifier switched to `/root/felo-v2-runtime/ntfy.env`; old channel removed from the retired v1 settings. Repo copies waiting for Deploy tap (002c069).
   - [ ] Nextcloud app password: Daniel creates a new one (needs core online) → `felo-set-secret nextcloud` → Claude applies + verifies → Daniel deletes the old one.
   - [x] Google client secret: new secret added by Daniel (client "Felo Assistant Agent Web", project 968092909560), accepted by Google, applied to v2 with a safe restart.
-  - [ ] Daniel disables the OLD Google secret → Claude confirms Google rejects it (this also kills v1's leaked refresh token — v1 used the same client).
+  - [x] Old Google secret disabled and deleted by Daniel; Google confirmed it is rejected (v1's leaked refresh token is dead too). Settings copy holding it destroyed.
   - [ ] Decision: the Proxmox host allows root SSH login with a password from the office Wi-Fi — switch to key-only? (Daniel: how do you log in today?)
-  - Found: Gmail was never connected in v2 (no saved sign-in). Connecting it = one click on /email (read-only). Not part of 1.1; the meetings-from-email check has nothing to read until then.
+  - Found: Gmail was never connected in v2. Daniel connected it on /email on 2026-09-24 (read-only, verified). Meetings-from-email now has mail to read (next automatic check within 2 hours, 7am-9pm).
   - Note: core is on Wi-Fi (the only machine not on ethernet); Daniel moves it to ethernet 2026-09-24 afternoon.
   - Note: core went offline 2026-09-24 15:30 UTC (felostudio.com, cloud, office = Cloudflare 530). Not caused by this phase (first change 15:31:28). Log: `/root/felo-plan-lockdown-*.log` on the Proxmox host.
 - **1.2 Off-site & recovery** — v2 code to GitHub (repo `felo-codex-preview`/`felo-v2`, Daniel creates it); off-site database backup; one test restore.
