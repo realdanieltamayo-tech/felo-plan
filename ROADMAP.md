@@ -11,6 +11,7 @@ Published page (diagram): https://claude.ai/artifact/A83xso7kLPuiFB4pjMbWXQ — 
 6. **Leadership & autonomy** — PRJ-07: chief of staff, strategist, analytics, Felo improving itself.
 
 ## Standing decisions
+- tyx is retired as a product (2026-09-24). Its server (Hostinger VPS 168.231.66.195) is no longer off-limits, but it still runs tyx/Postiz/Temporal and holds core's restic backups — change it carefully.
 - Nothing goes live without Daniel's Deploy tap; ideas are saved, not built, until scheduled.
 - All servers are Daniel's. Client sites are hosted separately from Felo's own boxes (CT100/CT101) so one client's problem can never touch Felo or another client. Which machine hosts them: open decision.
 - Code and design roles may use a cloud model (Claude API); email/CRM/finance stay local unless Daniel decides otherwise. *(Budget cap: pending Daniel.)*
