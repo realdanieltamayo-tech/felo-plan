@@ -17,7 +17,7 @@ Rule: one step at a time; each step ends with something Daniel can see and use; 
 
 ## Order of work for steps 2–3 (one sub-step at a time, each visible)
 - 2.1 Turn on Hermes' API server — **done 2026-09-24.** Port 8642 on CT101, key in CT101 `/root/.hermes/.env` (API_SERVER_*) and CT100 `/root/felo-v2-runtime/hermes.env`; firewall `felo-hermes-api-guard` (systemd) drops 8642 from everything except box 100 (100.81.117.27). Tested: answers with key in ~7 s; no key / wrong key = 401; Wi-Fi and other Tailscale devices blocked; Telegram reconnected. Settings backup: CT101 `/root/.hermes/.env.before-api-server-*`. (Servers page still points at the old dead address — fixed in 2.2.)
-- 2.2 Felo's chat screen talks to Hermes → the same Felo on the screen and on Telegram.
+- 2.2 Felo chat screen talks to Hermes — **done 2026-09-24** (deploy c923234 + settings FELO_CHAT_PROVIDER=hermes, HERMES_API_URL, HERMES_API_KEY in app.run.env). Tested over Tailscale: top bar Claude online, Servers page all working, chat answered by Hermes in 7 s. Same assistant/memory/skills as Telegram; separate conversation (Hermes can search past sessions). Switch back = FELO_CHAT_PROVIDER=ollama via /root/felo-v2-runtime/apply-app-env.sh. Until 2.3 the chat cannot use Felo tools (CRM, Felo calendar/memory, email/file commands); their pages still work.
 - 2.3 Hermes gets Felo's tools (CRM, leads, calendar, email, memory, files, projects).
 - 2.4 One identity + one memory (steps 4–5).
 - 2.5 Hermes delegates: backend to Claude Code, frontend/images to Codex (step 7).
