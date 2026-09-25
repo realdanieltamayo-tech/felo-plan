@@ -23,3 +23,4 @@ Format: date · idea in Daniel's words (short) · where it probably fits · stat
 | 2026-09-24 | New business: printing & artwork store (order → warehouse → pay → pick up → ship → tracking) | PRJ-09 | Planned |
 | 2026-09-24 | THE REBUILD real estate: website + CRM managed by Felo | PRJ-10 | Planned |
 | 2026-09-24 | Research the best option/prices to get Felo Studio clients now | Task for Felo | Open |
+| 2026-09-24 | Felo can open a workbench project's details (e.g. the Dogo Group LLC plan) and turn a roadmap into a checklist/task page with progress by phase (Daniel asked Felo for this; it could not yet) | Next small tools after 2.6 | Idea |
