@@ -18,3 +18,4 @@ Format: date · idea in Daniel's words (short) · where it probably fits · stat
 | 2026-09-24 | Assistant brain stays Gemma; no Claude backup brain for chat | PRJ-01 · 1.3 | Superseded same day: brain = Claude |
 | 2026-09-24 | Back up the Windows Codex bridge (code, settings, task) off-site too — today only a same-disk copy on the work PC | PRJ-01 1.3 or PRJ-02 | Idea |
 | 2026-09-24 | Hermes is the only assistant and boss of the other agents; brain = Claude ("use you, you are the best at coding") | Steps 2–3 | Decided — being built (2.1) |
+| 2026-09-24 | Felo must DO work, not just read: it manages a corporation with multiple products, services and future add-ons; main job = take workload off Daniel | Step 2.6 (permission levels) | Decided |
