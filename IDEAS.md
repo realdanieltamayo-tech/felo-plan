@@ -26,3 +26,6 @@ Format: date · idea in Daniel's words (short) · where it probably fits · stat
 | 2026-09-24 | Felo can open a workbench project's details (e.g. the Dogo Group LLC plan) and turn a roadmap into a checklist/task page with progress by phase (Daniel asked Felo for this; it could not yet) | Next small tools after 2.6 | Idea |
 
 - **2026-09-24 — Codex for frontend/images (later).** Daniel: Claude is the main brain and does backend AND frontend for now. The Codex bridge on the work PC stays as-is; add a Codex frontend command to Felo's dev team only when Daniel says so.
+
+- **2026-09-25 — Jobs panel on Felo HQ (step 9).** Live list of Felo's build jobs (project, running/done/failed, started, summary, preview link) so Daniel can see work in progress without asking in chat. Data: felo-team jobs in Felo's workroom (/workspace/jobs/*/job.json).
+- **2026-09-25 — One chat thread per project/business (steps 5 + 9).** Today Felo HQ is one long conversation (felo-hq) for everything. Split into threads (Dogo Group, Zubaloop, Cloud, THE REBUILD, printing store, general) so topics do not mix; each thread starts with that project's brief/plan/memory. Pairs with the business supervisors (PRJ-11).
