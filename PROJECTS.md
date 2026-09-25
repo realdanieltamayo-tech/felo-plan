@@ -13,7 +13,10 @@ Ideas Daniel pitches go to `IDEAS.md` — they are not worked on until they beco
 | PRJ-05 | Daily operations (email, calendar, CRM, files) | Planned | — |
 | PRJ-06 | Growth (sales, marketing, social, design, finance) | Planned | — |
 | PRJ-07 | Leadership & autonomy (chief of staff, strategist, analytics) | Planned | — |
-| PRJ-08 | Client: Odalyake | On hold | — |
+| PRJ-08 | Client: Odalyake (paralegal office, immigration) | On hold | — |
+| PRJ-09 | Printing & artwork store (new business) | Planned | — |
+| PRJ-10 | THE REBUILD: real estate website + CRM | Planned | — |
+| PRJ-11 | Business supervisors: one Felo agent per business, reporting to Felo | Planned | — |
 
 Order: PRJ-01 → PRJ-02 (PRJ-03 is its pilot) → PRJ-04 → PRJ-05 → PRJ-06 → PRJ-07. PRJ-08 when Daniel says.
 
@@ -50,3 +53,12 @@ Each department gets its own: instructions, AI model, tool access, memory scope,
 
 ## PRJ-05 → PRJ-07
 See ROADMAP.md (phases P2–P4 of the published roadmap).
+
+## PRJ-09 Printing & artwork store
+Website selling printing services (business cards etc.) and artworks. Order flow (Daniel): client orders → order on our dashboard → email design + measurements to the printing warehouse (never our price) → warehouse emails our cost → we pay → pick up → ship → client gets tracking → repeat. Daniel has a basic structure. Built by the Build Studio (step 7); Felo's printing supervisor runs the order flow.
+
+## PRJ-10 THE REBUILD
+Daniel's real estate business (realtamayo.com): website now, CRM later; a Felo supervisor for it.
+
+## PRJ-11 Business supervisors
+One supervising agent per business (Studio agency, Cloud, Zubaloop, THE REBUILD, printing store), each reporting to Felo, each tracking its income. Needs step 2.6 action tools + step 7 department agents first.

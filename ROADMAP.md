@@ -19,7 +19,7 @@ Rule: one step at a time; each step ends with something Daniel can see and use; 
 - 2.1 Turn on Hermes' API server — **done 2026-09-24.** Port 8642 on CT101, key in CT101 `/root/.hermes/.env` (API_SERVER_*) and CT100 `/root/felo-v2-runtime/hermes.env`; firewall `felo-hermes-api-guard` (systemd) drops 8642 from everything except box 100 (100.81.117.27). Tested: answers with key in ~7 s; no key / wrong key = 401; Wi-Fi and other Tailscale devices blocked; Telegram reconnected. Settings backup: CT101 `/root/.hermes/.env.before-api-server-*`. (Servers page still points at the old dead address — fixed in 2.2.)
 - 2.2 Felo chat screen talks to Hermes — **done 2026-09-24** (deploy c923234 + settings FELO_CHAT_PROVIDER=hermes, HERMES_API_URL, HERMES_API_KEY in app.run.env). Tested over Tailscale: top bar Claude online, Servers page all working, chat answered by Hermes in 7 s. Same assistant/memory/skills as Telegram; separate conversation (Hermes can search past sessions). Switch back = FELO_CHAT_PROVIDER=ollama via /root/felo-v2-runtime/apply-app-env.sh. Until 2.3 the chat cannot use Felo tools (CRM, Felo calendar/memory, email/file commands); their pages still work.
 - 2.3 Hermes gets Felo tools — **done 2026-09-24** (deploy 8724624). MCP server inside the app on port 8090 (`app/lib/felo-tools.js`), key FELO_MCP_KEY (`/root/felo-v2-runtime/tools.env` → app.run.env), firewall `felo-tools-guard` on box 100 (only 100.94.252.30), Hermes `mcp_servers.felo` in CT101 config.yaml (backup `config.yaml.before-felo-tools-*`). 12 tools: 10 read (waiting, servers, new leads, CRM search/get, calendar, email search/read, memory search, projects) + 2 propose (memory → Keep/Drop, calendar event → Confirm). No send/delete/pay/CRM writes. Tested: Wi-Fi + other devices blocked; Hermes answered a real question with felo_new_leads + felo_waiting in 14 s. Not yet: Nextcloud files tool.
-- 2.4 One identity + one memory (steps 4–5).
+- 2.4 One identity + one memory — **done 2026-09-24.** Identity `identity/FELO.md` (Daniel reviewed; his answers + felostudio.com published prices) installed as Hermes SOUL.md (backup `SOUL.md.before-felo-*`). Felo memory corrected (23 audited changes: Odalyake = paralegal/immigration, Stripe live for Cloud + Zubaloop, tyx retired, Zubaloop awaiting Meta, Artiria/Ledger paused, printing store, THE REBUILD, prices, Hermes-note facts). Hermes' separate memory switched off (`memory_enabled: false`, `user_profile_enabled: false`; old notes in CT101 `/root/.hermes/memories/archive-*`). Tested: answers as Felo, correct Office price, correct Odalyake, Spanish.
 - 2.5 Hermes delegates: backend to Claude Code, frontend/images to Codex (step 7).
 - 2.6 **Action tools with permission levels** (Daniel, 2026-09-24: "it has to be able to do more… its main job is to get a lot of workload off of me"). Level 1 just do it (internal, undoable: CRM records/stages/tasks/notes, drafts, research, sandbox builds). Level 2 do it and tell Daniel (visible but reversible: file docs in Nextcloud, organize, Felo calendar). Level 3 ask first (leaves the company or can't be undone: emails to clients, social posts, payments, going live, deleting). Every action audited.
 
@@ -58,6 +58,17 @@ To do: WhatsApp (Hermes supports); Instagram + Facebook (Meta business app); Ele
 ## 9. Interface — movie-style AI
 Made: Felo HQ (purple space look, orb, agents, chat, agenda) + pages (Waiting, Servers, Deploys, Calendar, Email, Memory, CRM, Projects); owner-only.
 To do: one consistent movie-AI design on every page (Codex); voice in/out; live activity; desktop/phone app.
+
+## The businesses Felo runs (Daniel, 2026-09-24)
+Felo manages every business under FGC, each with its own **supervising agent** that reports to Felo (Felo = the boss of the department agents):
+- **Felo Studio — agency** (brand & presence, systems & infrastructure; published prices on felostudio.com)
+- **Felo Studio Cloud** (live, Stripe live)
+- **Zubaloop** (live product, Stripe live, waiting for Meta approval to sell subscriptions)
+- **THE REBUILD** — Daniel's real estate business (website now, CRM later)
+- **Printing & artwork store** — NEW, to build. Flow: client orders on the site → order on our dashboard → email design + measurements to the printing warehouse (they never see our price) → warehouse emails our cost → we pay → pick up → ship → client gets tracking. Daniel has a basic structure for it.
+- Paused: Artiria, Ledger. Retired: tyx (a better replacement later).
+Supervisors per business are built after step 2.6 (action tools) and step 7 (department agents); each business also needs its income tracked (finance).
+Open task for Felo: research the best offer/prices to win clients now.
 
 ## Outside the 9 steps
 Client work (pilot oil/energy/mining site, Odalyake) needs the step-7 coding team · where client sites are hosted (open) · safety/approvals stay · retired tyx server (tyx, Postiz, Temporal, backups) · new product to replace tyx (idea) · cloud budget cap.
