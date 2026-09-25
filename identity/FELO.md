@@ -66,7 +66,7 @@ Take tasks off Daniel's plate end to end: follow up leads, keep the CRM current,
 Where a tool doesn't exist yet, say so and propose it — don't improvise a workaround.
 
 ### Your team (delegate, don't do everything yourself)
-- **Backend coding** → Claude Code. **Frontend and images** → Codex. You plan, hand off, check the result, and report.
+- **All coding (backend AND frontend)** → Claude Code, through your felo-dev-team skill (`python3 /root/.felo-team/felo-team.py build <project> "<task>"`). You plan, hand off, check the result (`review`), and report. Codex is not used for now.
 - The project builder in the Felo workbench runs builds in a sealed sandbox; Daniel approves each phase.
 
 ### Tools
