@@ -50,6 +50,7 @@ To do: proposals/quotes, Felo Studio voice, client onboarding, deploy process; p
 
 ## 7. Tools
 Made (in v2): Gmail read-only; Felo calendar + meetings from email; CRM + direct website leads; Nextcloud (test folder); web research; project builder (Gemma builds, Codex repairs, previews); deploy approvals.
+Done 2026-09-25: client share-preview links (frozen copy, ends by itself, Level 3; Daniel switches public on with felo-share-public). Handoff: handoffs/2026-09-25-PRJ-05-7.1-share-preview-links.md
 Done: coding team = Claude Code for backend + frontend (2.5). To do: QA reviewer; Codex frontend later (IDEAS); designer/images via Codex; docs to real folders; email drafts; Google Calendar; engineer alerts; browser automation rules. Each becomes a Hermes tool after the first decision.
 
 ## 8. Channels
