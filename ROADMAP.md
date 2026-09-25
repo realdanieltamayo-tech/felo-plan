@@ -29,19 +29,19 @@ To do: CT101 code into git; down-alerts; Windows Codex bridge off-site backup; c
 
 ## 2. Harness — Hermes
 Made: Hermes running on CT101, Telegram gateway, built-in skills/memory/cron/kanban/browser/web/tts.
-To do: confirm Hermes as the one harness; locked connection v2 ⇄ Hermes (old bridge was open and is off); v2 chat goes through Hermes.
+Done (2.1–2.6): Hermes is the one assistant; locked link v2 ⇄ Hermes; v2 chat goes through Hermes; Felo tools (read, propose, act L1/L2); dev team (Claude Code).
 
 ## 3. Brain
-Decided: brain = Claude (Hermes, Daniel's subscription); backend coding = Claude Code; frontend + images = Codex (bridge exists on Daniel's subscription). Gemma stays only for small local jobs if useful.
+Made: brain = Claude Opus 5.5 via API key (Hermes); ALL coding = Claude Code on Daniel's Claude subscription (2.5). Codex later (IDEAS). Gemma stays only for small local jobs if useful.
 To do: model choice inside Claude (everyday vs hard tasks); watch subscription limits.
 
 ## 4. Who it is
 Made: Hermes SOUL.md (2 KB, mostly safety); 74 facts in v2 memory; Felo Studio voice/design rules as memories.
-To do: one "Felo identity" document (Daniel, company, brands, services/prices, projects, clients, how to work and speak) loaded by Hermes; Daniel reviews once.
+Done (2.4): identity/FELO.md installed as Hermes SOUL.md; Daniel reviewed.
 
 ## 5. Long-term memory
 Made: v2 memory (103, used in every answer, Keep/Drop suggestions); Hermes has separate MEMORY.md/USER.md.
-To do: one memory — Hermes reads/writes the Felo memory; later per client/project.
+Done (2.4): one memory (Felo memory; Hermes' own memory off). Later: memory per client/project/department.
 
 ## 6. Skills
 Made: 61 generic Hermes skills; v2 project templates.
@@ -49,7 +49,7 @@ To do: Felo's own skills (website build playbook, proposals/quotes, Felo Studio 
 
 ## 7. Tools
 Made (in v2): Gmail read-only; Felo calendar + meetings from email; CRM + direct website leads; Nextcloud (test folder); web research; project builder (Gemma builds, Codex repairs, previews); deploy approvals.
-To do: coding team (Claude Code backend, Codex frontend, QA reviewer) — was PRJ-02; designer/images via Codex; docs to real folders; email drafts; Google Calendar; engineer alerts; browser automation rules. Each becomes a Hermes tool after the first decision.
+Done: coding team = Claude Code for backend + frontend (2.5). To do: QA reviewer; Codex frontend later (IDEAS); designer/images via Codex; docs to real folders; email drafts; Google Calendar; engineer alerts; browser automation rules. Each becomes a Hermes tool after the first decision.
 
 ## 8. Channels
 Made: Telegram (Hermes); private phone alerts; website form → CRM.
