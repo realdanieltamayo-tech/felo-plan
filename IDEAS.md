@@ -24,3 +24,5 @@ Format: date · idea in Daniel's words (short) · where it probably fits · stat
 | 2026-09-24 | THE REBUILD real estate: website + CRM managed by Felo | PRJ-10 | Planned |
 | 2026-09-24 | Research the best option/prices to get Felo Studio clients now | Task for Felo | Open |
 | 2026-09-24 | Felo can open a workbench project's details (e.g. the Dogo Group LLC plan) and turn a roadmap into a checklist/task page with progress by phase (Daniel asked Felo for this; it could not yet) | Next small tools after 2.6 | Idea |
+
+- **2026-09-24 — Codex for frontend/images (later).** Daniel: Claude is the main brain and does backend AND frontend for now. The Codex bridge on the work PC stays as-is; add a Codex frontend command to Felo's dev team only when Daniel says so.
