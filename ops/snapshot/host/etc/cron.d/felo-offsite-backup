@@ -1,2 +1,3 @@
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 # Felo off-site encrypted backup to the Hostinger VPS (PRJ-01 1.2). Nightly 04:30, after the 04:00 local vzdump.
-30 4 * * * root /usr/local/sbin/felo-offsite-backup >/dev/null 2>&1
+30 4 * * * root /usr/local/bin/felo-ran offsite-backup /usr/local/sbin/felo-offsite-backup >/dev/null 2>&1

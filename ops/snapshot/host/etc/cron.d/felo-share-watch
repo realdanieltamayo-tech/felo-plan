@@ -1,1 +1,2 @@
-* * * * * root /usr/local/sbin/felo-share-watch >> /var/log/felo-share-watch.log 2>&1
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+* * * * * root /usr/local/bin/felo-ran share-watch /usr/local/sbin/felo-share-watch >> /var/log/felo-share-watch.log 2>&1

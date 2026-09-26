@@ -7,6 +7,8 @@
                                 broken internal links, placeholder text, hotlinked images, heavy files
   local    "<instruction>" [file ...]   FREE: Gemma on Daniel's work PC reads/summarizes/translates/sorts text
                                 (files, or text piped in). Use it before reading long text yourself.
+  proposal-start <project> <CODE>   start a client proposal from the Felo Studio design (CODE = 3 letters, e.g. DGO)
+  proposal-pdf   <project>          check the proposal has no blanks left, then make proposal.pdf
   jobs                          recent jobs and their status
   setup-check                   is Claude Code logged in?
 
@@ -207,6 +209,38 @@ def local(instruction, names):
     if cut: out(f"\n[Note: only the first {LOCAL_LIMIT} characters were read; split long text into parts.]")
 
 
+TEMPLATE = HOME / '.felo-team/proposal-template.html'
+
+
+def proposal_start(name, code):
+    if not re.fullmatch(r'[A-Z]{3}', code or ''): sys.exit('CODE must be 3 capital letters for the client, e.g. DGO for Dogo Group.')
+    proj = project(name); d = proj / 'proposal'; d.mkdir(exist_ok=True); f = d / 'index.html'
+    number = 'FGC-' + time.strftime('%Y-%m%d') + '-' + code
+    if f.exists(): sys.exit(f'A proposal already exists: {f}. Edit it (keep its number) or move it to proposal/old-<date>.html first.')
+    f.write_text(TEMPLATE.read_text().replace('{{FGC-YYYY-MMDD-XXX}}', number))
+    out(f"Proposal {number} started: {f}\nFill every {{{{...}}}} (and delete sections that do not apply), then run:\n"
+        f"  python3 /root/.felo-team/felo-team.py proposal-pdf {name}")
+
+
+def proposal_pdf(name):
+    d = PROJECTS / name / 'proposal'; f = d / 'index.html'
+    if not f.exists(): sys.exit('No proposal yet. Start one with proposal-start.')
+    html = f.read_text()
+    left = sorted(set(m[:90] for m in re.findall(r'\{\{.*?\}\}', re.sub(r'<!--.*?-->', '', html, flags=re.S), flags=re.S)))
+    if left: sys.exit('Not finished: these blanks are still in the proposal:\n  ' + '\n  '.join(left[:25]))
+    ch = sorted(HOME.glob('.cache/ms-playwright/chromium-*/chrome-linux*/chrome'))
+    if not ch: sys.exit('Chrome is not installed in the workroom (pip install playwright && playwright install chromium).')
+    pdf = d / 'proposal.pdf'
+    r = subprocess.run([str(ch[-1]), '--headless=new', '--no-sandbox', '--disable-gpu', '--no-pdf-header-footer',
+                        '--virtual-time-budget=3000', '--print-to-pdf=' + str(pdf), f.as_uri()], capture_output=True, text=True, timeout=120)
+    if not pdf.exists() or pdf.stat().st_size < 2000:
+        sys.exit('The PDF could not be made: ' + (r.stderr or r.stdout)[-400:])
+    pages = len(re.findall(rb'/Type\s*/Page[^s]', pdf.read_bytes()))
+    git(PROJECTS / name, 'add', '-A'); git(PROJECTS / name, 'commit', '-q', '-m', 'proposal PDF ' + time.strftime('%Y-%m-%d %H:%M'))
+    out(f"PDF ready: {pdf} ({pages} page{'s' if pages != 1 else ''}, {pdf.stat().st_size // 1024} KB)\n"
+        f"Daniel can open it (his devices): {PREVIEW}{name}/proposal/  and  {PREVIEW}{name}/proposal/proposal.pdf")
+
+
 def jobs():
     for p in sorted(JOBS.glob('*/job.json'))[-15:]:
         m = json.loads(p.read_text()); out(f"{m['job']}  {m['project']:<24} {m['status']}")
@@ -226,6 +260,8 @@ if __name__ == '__main__':
     elif cmd == 'review' and len(a) == 2: review(a[1])
     elif cmd == 'check-site' and len(a) == 2: check_site(a[1])
     elif cmd == 'local' and len(a) >= 2: local(a[1], a[2:])
+    elif cmd == 'proposal-start' and len(a) == 3: proposal_start(a[1], a[2])
+    elif cmd == 'proposal-pdf' and len(a) == 2: proposal_pdf(a[1])
     elif cmd == 'jobs': jobs()
     elif cmd == 'setup-check': setup_check()
     else: sys.exit(__doc__)

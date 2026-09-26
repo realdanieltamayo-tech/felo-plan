@@ -1,4 +1,5 @@
 #!/bin/bash
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 # Nightly: copy Felo's setup files (scripts, settings, identity, skills, services, crontabs) from the
 # Proxmox host, box 100 and box 101 into the plan repo (CT100 /root/felo-plan/ops/snapshot), which
 # mirrors to GitHub. Every file is scanned for secrets first; a file with anything secret-looking is

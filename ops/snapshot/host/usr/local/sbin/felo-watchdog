@@ -1,0 +1,338 @@
+#!/usr/bin/env python3
+"""Felo watchdog (Proxmox host, every 5 minutes from cron).
+
+Checks everything Felo needs. When a check fails twice in a row (about 10 minutes) Daniel's phone
+gets ONE alert in plain words (ntfy, the same Felo alert channel); when it works again he gets a
+"working again" alert. Some checks are slower on purpose (work PC: 60 minutes, quiet at night).
+The alert channel name is read from box 100 when needed (from its disk if box 100 is down); it is
+never stored here or printed.  In-repo copy: felo-plan ops/snapshot (nightly).
+Test alert:  felo-watchdog --test
+"""
+import json, os, re, socket, ssl, subprocess, sys, time, urllib.request, urllib.parse, datetime
+os.environ["PATH"] = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+STATE = "/var/lib/felo-watchdog/state.json"
+SERVERS = "https://felo-orchestrator.tail0ff06a.ts.net:8443/servers"
+
+
+def run(cmd, timeout=25):
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+        return r.returncode, r.stdout.strip()
+    except Exception:
+        return 1, ""
+
+
+def running(ct):
+    return run(["pct", "status", str(ct)])[1].endswith("running")
+
+
+def in_ct(ct, sh, timeout=25):
+    return run(["pct", "exec", str(ct), "--", "sh", "-c", sh], timeout)
+
+
+def http(url, timeout=15):
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "felo-watchdog"})
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return r.status
+    except urllib.error.HTTPError as e:
+        return e.code
+    except Exception:
+        return 0
+
+
+def central_hour():
+    return (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=5)).hour
+
+
+# ---- checks: (key, name, test() -> None if OK else a plain-words problem, fails needed, quiet at night)
+def c_box(ct, label):
+    return lambda: None if running(ct) else f"{label} is not running."
+
+def c_app():
+    if not running(100): return "Box 100 is off, so the Felo app is off."
+    code, out = in_ct(100, "curl -s -o /dev/null -m 10 -w '%{http_code}' http://127.0.0.1:8081/hq")
+    return None if out[:1] in "234" and out != "" else f"The Felo app is not answering (HTTP {out or 'no answer'})."
+
+def c_db():
+    if not running(100): return "Box 100 is off."
+    code, _ = in_ct(100, "docker exec felo-codex-preview-db pg_isready -q")
+    return None if code == 0 else "The Felo database is not answering."
+
+def c_intake():
+    if not running(100): return "Box 100 is off."
+    code, out = in_ct(100, "docker inspect -f '{{.State.Running}}' felo-v2-intake")
+    return None if out == "true" else "The website lead form is stopped: new leads from felostudio.com are not arriving."
+
+def c_voice():
+    if not running(100): return "Box 100 is off."
+    code, out = in_ct(100, "docker inspect -f '{{.State.Running}}' felo-voice")
+    return None if out == "true" else "Felo's voice service is stopped: Felo HQ falls back to the browser voice. Fix: /root/felo-v2-work/voice/run.sh on box 100."
+
+def c_hermes():
+    if not running(101): return "Box 101 is off, so Felo (Hermes) cannot answer."
+    code, out = in_ct(100, "curl -s -o /dev/null -m 10 -w '%{http_code}' http://100.94.252.30:8642/v1/health")  # only box 100 may reach it
+    return None if out == "200" else "Felo's brain (Hermes) is not answering: chat and Telegram are down."
+
+def c_share():
+    if not running(101): return "Box 101 is off."
+    code, out = in_ct(101, "curl -s -o /dev/null -m 10 -w '%{http_code}' http://127.0.0.1:8096/")
+    return None if out == "404" else "The client preview-link server is down: shared links do not open."
+
+def c_site():
+    code = http("https://felostudio.com/")
+    return None if 200 <= code < 400 else f"felostudio.com is not loading (HTTP {code or 'no answer'}). Clients cannot reach the website."
+
+def c_backup():
+    try:
+        s = open("/root/.felo-backup/last-status").read().split()
+        when = datetime.datetime.fromisoformat(s[1].replace("Z", "+00:00"))
+        age = (datetime.datetime.now(datetime.timezone.utc) - when).total_seconds() / 3600
+    except Exception:
+        return "The off-site backup status could not be read."
+    if s[0] != "ok": return "Last night's off-site backup FAILED (" + " ".join(s[2:])[:120] + ")."
+    return None if age < 30 else f"No successful off-site backup for {int(age)} hours."
+
+def c_disk():
+    full = []
+    for label, cmd in [("Proxmox host", ["df", "--output=pcent", "/"])]:
+        out = run(cmd)[1].splitlines()[-1:] or ["0%"]
+        if int(out[0].strip().rstrip("%") or 0) >= 90: full.append(label)
+    out = run(["lvs", "--noheadings", "-o", "data_percent", "pve/data"])[1].strip()
+    if out and float(out) >= 85: full.append("container storage (local-lvm)")
+    for ct, label in [(100, "box 100"), (101, "box 101")]:
+        if running(ct):
+            o = in_ct(ct, "df --output=pcent / | tail -1")[1].strip().rstrip("%")
+            if o.isdigit() and int(o) >= 90: full.append(label)
+    return None if not full else "Disk almost full: " + ", ".join(full) + "."
+
+def c_workpc():
+    code = http("http://100.109.89.77:11434/api/version", 10)
+    return None if code == 200 else "The work PC's local AI (Gemma) is off: free jobs (email meetings, chat titles, long reading) are paused. Is the work PC on?"
+
+def c_coder():
+    if not running(101): return "Box 101 is off."
+    code, _ = in_ct(101, "test -s /root/.hermes/sandboxes/docker/default/home/.claude/.credentials.json")
+    return None if code == 0 else "Claude Code (Felo's coder) is logged out. Run felo-claude-login on the Proxmox terminal."
+
+CHECKS = [
+    ("box100", "Box 100 (Felo app)", c_box(100, "Box 100 (Felo app, database, lead form)"), 2, False),
+    ("box101", "Box 101 (Hermes)", c_box(101, "Box 101 (Felo's brain, coder, previews)"), 2, False),
+    ("app", "Felo app", c_app, 2, False),
+    ("db", "Felo database", c_db, 2, False),
+    ("intake", "Website lead form", c_intake, 2, False),
+    ("hermes", "Felo's brain (Hermes)", c_hermes, 2, False),
+    ("voice", "Felo HQ voice", c_voice, 3, False),
+    ("share", "Client preview links", c_share, 2, False),
+    ("backup", "Off-site backup", c_backup, 1, False),
+    ("disk", "Disk space", c_disk, 1, False),
+    ("workpc", "Work PC local AI", c_workpc, 12, True),
+    ("coder", "Claude Code login", c_coder, 2, False),
+]
+
+
+# ---- Websites (PRJ-12 phase 3): every live site in the Felo app's list (felo_websites) is checked each run;
+# the result is written back for the Websites page. Alerts per site: down twice in a row, certificate < 14 days.
+def db(sql):
+    return subprocess.run(["pct", "exec", "100", "--", "docker", "exec", "-i", "felo-codex-preview-db", "sh", "-c",
+                        'psql -XqAt -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d felo_preview'], input=sql, capture_output=True, text=True, timeout=60)
+
+
+def cert_days(host):
+    try:
+        with socket.create_connection((host, 443), timeout=10) as sock:
+            with ssl.create_default_context().wrap_socket(sock, server_hostname=host) as s:
+                end = ssl.cert_time_to_seconds(s.getpeercert()["notAfter"])
+        return end
+    except Exception:
+        return None
+
+
+def check_sites(state):
+    if not running(100): return
+    r = db("SELECT coalesce(json_agg(json_build_object('id',id,'name',name,'url',url)),'[]') FROM felo_websites WHERE kind='live';")
+    if r.returncode: return
+    try: sites = json.loads(r.stdout.strip() or "[]")
+    except Exception: return
+    updates = []
+    for w in sites:
+        t0 = time.time(); code = http(w["url"], 20); ms = int((time.time() - t0) * 1000)
+        up = 200 <= code < 400
+        host = urllib.parse.urlsplit(w["url"]).hostname or ""
+        end = cert_days(host) if w["url"].startswith("https://") else None
+        sid = int(w["id"])
+        updates.append("UPDATE felo_websites SET up=%s,last_code=%d,last_ms=%d,last_checked=now(),cert_expires=%s,"
+                       "down_since=CASE WHEN %s THEN NULL ELSE coalesce(down_since,now()) END WHERE id=%d;"
+                       % ("true" if up else "false", code, ms, ("to_timestamp(%d)" % end) if end else "cert_expires", "true" if up else "false", sid))
+        name = str(w["name"])[:80]
+        s = state.setdefault("site:%d" % sid, {"fails": 0, "alerted": False})
+        if not up:
+            s["fails"] += 1
+            if s["fails"] >= 2 and not s["alerted"]:
+                if send("Felo: website down: " + name, name + " (" + w["url"] + ") is not loading (HTTP " + (str(code) if code else "no answer") + "). Visitors cannot reach it.\nOpen Websites in Felo HQ.", "rotating_light", "high"):
+                    s["alerted"] = True
+        else:
+            if s["alerted"]: send("Felo: website working again: " + name, name + " is loading again.", "white_check_mark")
+            state["site:%d" % sid] = {"fails": 0, "alerted": False}
+        c = state.setdefault("cert:%d" % sid, {"alerted": False})
+        if end and end - time.time() < 14 * 86400:
+            if not c["alerted"] and send("Felo: certificate ending: " + name, "The security certificate of " + name + " ends in " + str(max(0, int((end - time.time()) / 86400))) + " days. After that browsers show a warning.", "warning"):
+                c["alerted"] = True
+        elif end:
+            state["cert:%d" % sid] = {"alerted": False}
+        print(f"site:{sid:<3} {'OK' if up else 'FAIL x' + str(s.get('fails', 0))}  {name} {code} {ms}ms")
+    if updates: db("\n".join(updates))
+
+
+# ---- Automations (PRJ-12 phase 4): everything that runs by itself, with its last run and result, for the
+# Automations page. Jobs record their runs with /usr/local/bin/felo-ran (host, box 100, box 101); full box copies,
+# the box 100 database timer and Felo's own scheduled jobs (Hermes) are read where they keep their status.
+AUTOMATIONS = [
+    ("watchdog", "Watchdog", "Checks every part of Felo and every website; sends phone alerts.", "Proxmox host", "Every 5 minutes", 5, ("ran", "host")),
+    ("share-watch", "Share button helper", "Carries out your Share and Turn off taps on the Shares page.", "Proxmox host", "Every minute", 1, ("ran", "host")),
+    ("workroom-sync", "Projects & jobs sync", "Copies Felo's projects and coding jobs to the Projects & jobs page.", "Proxmox host", "Every minute", 1, ("ran", "host")),
+    ("ops-snapshot", "Setup snapshot to git", "Saves all setup files (scripts, settings, Felo's identity and skills) to git and GitHub.", "Proxmox host", "Daily 3:20 am", 1440, ("ran", "host")),
+    ("vzdump", "Full box copies", "Full copies of box 100 and box 101 on the server (the last 2 are kept).", "Proxmox host", "Daily 4:00 am", 1440, ("vzdump",)),
+    ("offsite-backup", "Off-site backup", "Encrypted backup of the database and all settings to the off-site server; full box copies on Sundays.", "Proxmox host", "Daily 4:30 am", 1440, ("ran", "host")),
+    ("db-backup", "Database backup (box 100)", "Daily copy of the Felo database kept on box 100.", "Box 100", "Daily 10:30 pm", 1440, ("timer", 100, "felo-backup")),
+    ("deploy-watch", "Deploy page helper", "Puts finished updates on your Deploy page and runs the deploy when you tap it.", "Box 100", "Every minute", 1, ("ran", 100)),
+    ("notify", "Phone alerts: meetings and shares", "Alerts your phone about meetings Felo found in email and share requests.", "Box 100", "Every minute", 1, ("ran", 100)),
+    ("github-mirror", "GitHub mirror", "Copies the Felo code and plans to your private GitHub.", "Box 100", "Daily 3:40 am", 1440, ("ran", 100)),
+    ("share-expire", "Client link cleanup", "Removes client preview links whose time is up.", "Box 101", "Every hour", 60, ("ran", 101)),
+    ("morning-briefing", "Morning briefing", "Felo's morning briefing on your Telegram (text and voice).", "Felo's brain", "Daily 7:30 am", 1440, ("hermes", "morning-briefing")),
+    ("felo-events", "Felo speaks first", "Watches for new leads, emails and finished jobs; Felo messages you only when something is new. Quiet 10 pm - 7 am.", "Felo's brain", "Every 5 minutes", 5, ("hermes", "felo-events")),
+]
+
+
+def _ran_records(where):
+    cmd = "cat /var/lib/felo-automations/*.json 2>/dev/null"
+    out = run(["bash", "-c", cmd])[1] if where == "host" else (in_ct(where, cmd)[1] if running(where) else "")
+    recs = {}
+    for line in out.splitlines():
+        try: r = json.loads(line); recs[r["name"]] = r
+        except Exception: pass
+    return recs
+
+
+def collect_automations(state):
+    if not running(100): return
+    ran = {w: _ran_records(w) for w in ("host", 100, 101)}
+    hermes = {}
+    if running(101):
+        try:
+            d = json.loads(in_ct(101, "cat /root/.hermes/cron/jobs.json")[1])
+            for j in (d.get("jobs", d) if isinstance(d, dict) else d): hermes[j.get("name")] = j
+        except Exception: pass
+    rows = []
+    for key, title, what, where, sched, every, src in AUTOMATIONS:
+        last = ok = nxt = None; detail = ""
+        if src[0] == "ran":
+            r = ran[src[1]].get(key)
+            if r: last, ok = int(r["end"]), int(r["exit"]) == 0; detail = "" if ok else "exit code %s" % r["exit"]
+            if key == "offsite-backup":
+                try:
+                    st = open("/root/.felo-backup/last-status").read().split()
+                    ok = st[0] == "ok"; detail = "" if ok else "failed: " + " ".join(st[2:])[:150]
+                    if last is None: last = int(datetime.datetime.fromisoformat(st[1].replace("Z", "+00:00")).timestamp())
+                except Exception: pass
+        elif src[0] == "vzdump":
+            try:
+                t = json.loads(run(["pvesh", "get", "/nodes/" + os.uname().nodename + "/tasks", "--typefilter", "vzdump", "--limit", "1", "--output-format", "json"], 30)[1])[0]
+                last, ok = int(t.get("endtime") or t["starttime"]), t.get("status") == "OK"; detail = "" if ok else str(t.get("status"))[:150]
+            except Exception: pass
+        elif src[0] == "timer":
+            o = in_ct(src[1], "systemctl show %s.service -p Result -p ExecMainExitTimestamp --value; systemctl show %s.timer -p NextElapseUSecRealtime --value" % (src[2], src[2]))[1].splitlines()
+            try:
+                ok = o[0].strip() == "success"
+                if o[1].strip(): last = int(datetime.datetime.strptime(" ".join(o[1].split()[1:3]), "%Y-%m-%d %H:%M:%S").replace(tzinfo=datetime.timezone.utc).timestamp())
+                if len(o) > 2 and o[2].strip(): nxt = int(datetime.datetime.strptime(" ".join(o[2].split()[1:3]), "%Y-%m-%d %H:%M:%S").replace(tzinfo=datetime.timezone.utc).timestamp())
+                detail = "" if ok else o[0].strip()
+            except Exception: pass
+        elif src[0] == "hermes":
+            j = hermes.get(src[1]) or {}
+            try:
+                if j.get("last_run_at"): last = int(datetime.datetime.fromisoformat(j["last_run_at"]).timestamp())
+                if j.get("next_run_at"): nxt = int(datetime.datetime.fromisoformat(j["next_run_at"]).timestamp())
+            except Exception: pass
+            if j.get("last_status"): ok = j["last_status"] in ("ok", "success", "silent", "skipped"); detail = "" if ok else (str(j.get("last_error") or j["last_status"]))[:150]
+            if not j: detail = "job not found in Hermes"; ok = False
+        overdue = bool(last) and (time.time() - last) / 60 > max(every * 3, every + 30)
+        rows.append((key, title, what, where, sched, every, last, ok, detail, nxt, overdue))
+        # alerts: failed, or stopped running
+        a = state.setdefault("auto:" + key, {"alerted": False})
+        bad = (ok is False) or overdue
+        if bad and not a["alerted"]:
+            why = ("its last run failed" + (" (" + detail + ")" if detail else "")) if ok is False else "it has not run since " + datetime.datetime.fromtimestamp(last).strftime("%b %d %H:%M")
+            if send("Felo: automation problem: " + title, title + ": " + why + ".\n" + what, "warning", "high"): a["alerted"] = True
+        elif not bad and a["alerted"]:
+            send("Felo: automation working again: " + title, title + " is running normally again.", "white_check_mark"); state["auto:" + key] = {"alerted": False}
+    q = lambda v: "NULL" if v is None else "'" + str(v).replace("'", "''") + "'"
+    ts = lambda v: "NULL" if not v else "to_timestamp(%d)" % v
+    sql = ["CREATE TABLE IF NOT EXISTS felo_automations(key text PRIMARY KEY, title text, what text, where_runs text, schedule text, every_min int, "
+           "last_run timestamptz, last_ok boolean, last_detail text, last_success timestamptz, next_run timestamptz, overdue boolean, sort int, updated_at timestamptz DEFAULT now());"]
+    for i, (key, title, what, where, sched, every, last, ok, detail, nxt, overdue) in enumerate(rows):
+        sql.append("INSERT INTO felo_automations(key,title,what,where_runs,schedule,every_min,last_run,last_ok,last_detail,last_success,next_run,overdue,sort,updated_at) "
+                   "VALUES(%s,%s,%s,%s,%s,%d,%s,%s,%s,%s,%s,%s,%d,now()) ON CONFLICT(key) DO UPDATE SET title=EXCLUDED.title,what=EXCLUDED.what,where_runs=EXCLUDED.where_runs,"
+                   "schedule=EXCLUDED.schedule,every_min=EXCLUDED.every_min,last_run=EXCLUDED.last_run,last_ok=EXCLUDED.last_ok,last_detail=EXCLUDED.last_detail,"
+                   "last_success=coalesce(EXCLUDED.last_success,felo_automations.last_success),next_run=EXCLUDED.next_run,overdue=EXCLUDED.overdue,sort=EXCLUDED.sort,updated_at=now();"
+                   % (q(key), q(title), q(what), q(where), q(sched), every, ts(last), "NULL" if ok is None else ("true" if ok else "false"), q(detail or None),
+                      ts(last) if ok else "NULL", ts(nxt), "true" if overdue else "false", i))
+    sql.append("DELETE FROM felo_automations WHERE key NOT IN (%s);" % ",".join(q(r[0]) for r in rows))
+    db("\n".join(sql))
+    for r in rows: print(f"auto:{r[0]:<17} {'OK' if r[7] else ('FAIL' if r[7] is False else 'not yet')}{' OVERDUE' if r[10] else ''}")
+
+
+def topic():
+    if running(100):
+        return in_ct(100, "sed -n 's/^NTFY_TOPIC=//p' /root/felo-v2-runtime/ntfy.env")[1].strip()
+    # Box 100 is down: read the channel name from its disk (mount, read, unmount).
+    code, _ = run(["pct", "mount", "100"], 60)
+    try:
+        return open("/var/lib/lxc/100/rootfs/root/felo-v2-runtime/ntfy.env").read().split("NTFY_TOPIC=", 1)[1].split()[0]
+    except Exception:
+        return ""
+    finally:
+        if code == 0: run(["pct", "unmount", "100"], 60)
+
+
+def send(title, body, tags, priority="default"):
+    t = topic()
+    if not re.fullmatch(r"[A-Za-z0-9_-]{8,}", t or ""): return False
+    try:
+        title = title.encode("latin-1", "replace").decode("latin-1")  # HTTP headers cannot carry other characters
+        req = urllib.request.Request("https://ntfy.sh/" + t, data=body.encode(),
+                                     headers={"Title": title, "Tags": tags, "Priority": priority, "Click": SERVERS})
+        urllib.request.urlopen(req, timeout=15); return True
+    except Exception:
+        return False
+
+
+def main():
+    if "--test" in sys.argv:
+        ok = send("Felo watchdog is on", "This is a test. From now on your phone gets an alert when part of Felo stops working, and another when it works again.", "white_check_mark")
+        print("test alert sent" if ok else "test alert could not be sent"); return
+    os.makedirs(os.path.dirname(STATE), exist_ok=True)
+    try: state = json.load(open(STATE))
+    except Exception: state = {}
+    night = central_hour() >= 22 or central_hour() < 7
+    for key, name, test, need, quiet in CHECKS:
+        s = state.setdefault(key, {"fails": 0, "alerted": False})
+        try: problem = test()
+        except Exception as e: problem = f"{name} could not be checked ({type(e).__name__})."
+        if problem:
+            s["fails"] += 1; s["last"] = problem
+            if s["fails"] >= need and not s["alerted"] and not (quiet and night):
+                if send("Felo: " + name + ": problem", problem + "\nOpen the Servers page for details.", "rotating_light", "high"):
+                    s["alerted"] = True
+        else:
+            if s["alerted"]:
+                send("Felo: " + name + ": working again", name + " is working again.", "white_check_mark")
+            state[key] = {"fails": 0, "alerted": False}
+        print(f"{key:<8} {'OK' if not problem else 'FAIL x' + str(s['fails'])}  {problem or ''}")
+    check_sites(state)
+    collect_automations(state)
+    json.dump(state, open(STATE, "w"), indent=1)
+
+
+if __name__ == "__main__":
+    main()

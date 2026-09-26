@@ -1,0 +1,9 @@
+#!/bin/sh
+# felo-ran <name> <command...>
+# Runs one scheduled Felo job and records when it ran and whether it worked, for the Automations page in
+# Felo HQ (collected by the Proxmox watchdog). The job's own output and exit code are unchanged.
+name=$1; shift
+d=/var/lib/felo-automations; mkdir -p "$d"
+start=$(date +%s); "$@"; rc=$?; end=$(date +%s)
+printf '{"name":"%s","start":%s,"end":%s,"exit":%s}\n' "$name" "$start" "$end" "$rc" > "$d/$name.json.tmp" && mv "$d/$name.json.tmp" "$d/$name.json"
+exit $rc

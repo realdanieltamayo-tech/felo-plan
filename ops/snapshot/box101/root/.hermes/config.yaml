@@ -84,14 +84,22 @@ display:
   cleanup_progress: false
   long_running_notifications: true
   busy_ack_detail: true
+tts:
+  provider: edge
+  edge:
+    voice: en-US-AvaMultilingualNeural
 stt:
   enabled: true
-  language: en
+  language: ''
   local:
     model: base
+    initial_prompt: Felo, Felo Studio, Felo Global, Dogo Group, Lucas Osorio, Zubaloop,
+      Odalyake, THE REBUILD, Daniel Tamayo.
   openai:
     model: whisper-1
     language: ''
+voice:
+  auto_tts: true
 memory:
   memory_enabled: false
   user_profile_enabled: false
@@ -105,50 +113,50 @@ delegation:
   reasoning_effort: high
 skills:
   creation_nudge_interval: 15
-  # 2026-09-26 step 6: skills Felo does not use (still installed; remove a name to bring it back)
   disabled:
-  - airtable
-  - apple-notes
-  - apple-reminders
-  - architecture-diagram
-  - arxiv
-  - ascii-video
-  - baoyu-infographic
-  - box
-  - claude-code
-  - codex
-  - computer-use
-  - dogfood
-  - findmy
-  - gif-search
-  - github
-  - google-workspace
-  - hermes-agent
-  - hermes-agent-skill-authoring
-  - himalaya
-  - imessage
-  - inspecting-hermes-desktop-dom
-  - llm-wiki
-  - manim-video
-  - maps
-  - node-inspect-debugger
-  - notion
-  - obsidian
-  - opencode
-  - p5js
-  - product-price-monitor
-  - python-debugpy
-  - reddit-reading
-  - rss-feeds
-  - simplify-code
-  - songsee
-  - songwriting-and-ai-music
-  - spike
-  - teams-meeting-pipeline
-  - test-driven-development
-  - xurl
-  - youtube-content
-  - sdlc-review
+    - airtable
+    - apple-notes
+    - apple-reminders
+    - architecture-diagram
+    - arxiv
+    - ascii-video
+    - baoyu-infographic
+    - box
+    - claude-code
+    - codex
+    - computer-use
+    - dogfood
+    - findmy
+    - gif-search
+    - github
+    - google-workspace
+    - hermes-agent
+    - hermes-agent-skill-authoring
+    - himalaya
+    - imessage
+    - inspecting-hermes-desktop-dom
+    - llm-wiki
+    - manim-video
+    - maps
+    - node-inspect-debugger
+    - notion
+    - obsidian
+    - opencode
+    - p5js
+    - product-price-monitor
+    - python-debugpy
+    - reddit-reading
+    - rss-feeds
+    - simplify-code
+    - songsee
+    - songwriting-and-ai-music
+    - spike
+    - teams-meeting-pipeline
+    - test-driven-development
+    - xurl
+    - youtube-content
+    - sdlc-review
+timezone: America/Chicago
 kanban:
   review_dispatch: true
 code_execution:
@@ -200,10 +208,11 @@ updates:
 proxy:
   enabled: false
 _config_version: 41
-session_reset:
-  mode: none
-  idle_minutes: 1440
+session_reset:  # 2026-09-26: Telegram chat had run since Sep 7 and Felo mixed old messages with new ones
+  mode: both  # fresh conversation daily at 4 am Central, or after 6 hours of silence
+  idle_minutes: 360
   at_hour: 4
+  notify: false
 group_sessions_per_user: true
 platform_toolsets:
   cli:
@@ -248,6 +257,13 @@ platform_toolsets:
     - todo
     - vision
     - web
+  cron:
+    - file
+    - kanban
+    - skills
+    - terminal
+    - todo
+    - tts
 mcp_servers:
   felo:
     url: http://100.81.117.27:8090/mcp
@@ -259,6 +275,9 @@ known_plugin_toolsets:
     - a2a
     - spotify
   telegram:
+    - a2a
+    - spotify
+  cron:
     - a2a
     - spotify
 known_builtin_toolsets:
@@ -290,6 +309,33 @@ known_builtin_toolsets:
     - x_search
     - yuanbao
   telegram:
+    - browser
+    - clarify
+    - code_execution
+    - computer_use
+    - context_engine
+    - cronjob
+    - delegation
+    - discord
+    - discord_admin
+    - file
+    - homeassistant
+    - image_gen
+    - memory
+    - session_search
+    - skills
+    - spotify
+    - stt
+    - terminal
+    - todo
+    - tts
+    - video
+    - video_gen
+    - vision
+    - web
+    - x_search
+    - yuanbao
+  cron:
     - browser
     - clarify
     - code_execution

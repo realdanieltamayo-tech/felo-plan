@@ -1,4 +1,5 @@
 #!/bin/bash
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 # Felo off-site backup -> encrypted restic store on the Hostinger VPS (locked SFTP account).
 # Runs nightly from cron on the Proxmox host. PRJ-01 1.2, 2026-09-24.
 #   felo-offsite-backup            nightly set (+ full containers on Sundays)

@@ -8,7 +8,8 @@
 The Felo app only records Daniel's decisions; it cannot make anything public. Felo (Hermes)
 can only ask. The v2 database is reached through box 100's Docker socket, never HTTP.
 In-repo copy: ops/felo-share-watch.py (felo-v2)."""
-import json, re, subprocess, sys
+import json, os, re, subprocess, sys
+os.environ["PATH"] = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"  # cron has a short PATH (pct lives in /usr/sbin)
 
 NAME = re.compile(r'^[a-z0-9][a-z0-9-]{0,40}$')
 SID = re.compile(r'/s/([A-Za-z0-9_-]{20,})/$')

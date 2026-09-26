@@ -1,0 +1,3 @@
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# Felo watchdog: phone alert when part of Felo stops working (and when it works again). Every 5 minutes.
+*/5 * * * * root /usr/local/bin/felo-ran watchdog /usr/local/sbin/felo-watchdog > /var/log/felo-watchdog.log 2>&1

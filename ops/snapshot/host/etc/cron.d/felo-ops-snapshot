@@ -1,1 +1,2 @@
-20 3 * * * root /usr/local/sbin/felo-ops-snapshot >> /var/log/felo-ops-snapshot.log 2>&1
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+20 3 * * * root /usr/local/bin/felo-ran ops-snapshot /usr/local/sbin/felo-ops-snapshot >> /var/log/felo-ops-snapshot.log 2>&1

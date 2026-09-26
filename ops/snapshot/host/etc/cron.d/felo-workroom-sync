@@ -1,0 +1,3 @@
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# Felo: copy a summary of the workroom (projects, jobs) to the Felo app every minute (Projects & jobs page).
+* * * * * root /usr/local/bin/felo-ran workroom-sync /usr/local/sbin/felo-workroom-sync >/dev/null 2>&1

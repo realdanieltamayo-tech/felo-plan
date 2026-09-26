@@ -19,6 +19,8 @@ Prices and bundles come from your identity (Felo Studio section). Never invent a
 Tools: `python3 /root/.felo-team/felo-team.py build|review|check-site|jobs <project> ...`
 Preview (Daniel's devices only): `https://felo-hermes.tail0ff06a.ts.net:8900/<project>/`
 
+**Link the project to its client** as soon as you start: Felo tool `felo_project_link` (project, contact_id). It then shows on the client's page in the Clients hub and on Projects & jobs.
+
 ## Phase 1 — Brief (before any code)
 
 Collect, from Daniel, the CRM (felo_crm_search / felo_crm_get), emails (felo_email_search) and memory (felo_memory_search):
@@ -66,6 +68,8 @@ Going live, pointing a domain, emailing the client, sending an invoice = **ask D
 Prepare for him: preview link, what is in it, open decisions, where it will be hosted (open decision: Daniel's own
 servers), and the price/bundle. After it goes live: CRM note "Website delivered", and a task for monthly care if the
 bundle includes it.
+Also record it with `felo_website_save` (name, url, contact_id, hosted_on, care_plan, project) so it appears on the
+Websites page and is checked every 5 minutes.
 
 ## Your own businesses
 

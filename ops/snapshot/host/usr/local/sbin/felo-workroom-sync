@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+"""Proxmox host, every minute: copy a small summary of Felo's workroom (box 101) into the Felo app's
+database (box 100) for the Projects & jobs page. Read-only on box 101; writes one row (felo_workroom id=1).
+Projects: name, stage, which files exist (site, brief, plan, proposal, PDF), last change, jobs done.
+Jobs: project, status, times, task and summary (shortened). No file contents beyond that.
+In-repo copy: felo-plan ops/snapshot (nightly)."""
+import json, os, subprocess, sys
+os.environ["PATH"] = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+COLLECT = r'''
+import json, os, pathlib, re, subprocess
+W = pathlib.Path("/root/.hermes/sandboxes/docker/default/workspace")
+jobs = []
+for p in sorted((W / "jobs").glob("*/job.json"), reverse=True)[:80]:
+    try: m = json.loads(p.read_text())
+    except Exception: continue
+    d = p.parent
+    rd = lambda n, k: (d / n).read_text(errors="replace")[:k] if (d / n).exists() else ""
+    jobs.append({"job": m.get("job"), "project": m.get("project"), "kind": m.get("kind"), "status": m.get("status"),
+                 "started": m.get("started"), "finished": m.get("finished"), "task": rd("task.txt", 400), "summary": rd("summary.txt", 1500)})
+projects = []
+for d in sorted((W / "projects").iterdir()) if (W / "projects").exists() else []:
+    if not d.is_dir() or d.name.startswith("."): continue
+    f = lambda *a: d.joinpath(*a).is_file()
+    last = subprocess.run(["git", "-C", str(d), "log", "-1", "--format=%cI%x1f%s"], capture_output=True, text=True).stdout.strip().split("\x1f")
+    mine = [j for j in jobs if j["project"] == d.name]
+    running = any(j["status"] == "running" for j in mine)
+    stage = ("Building" if running else "Proposal ready" if f("proposal", "proposal.pdf") else "Ready to review" if f("index.html")
+             else "Plan" if f("PLAN.md") else "Brief" if f("BRIEF.md") else "Started")
+    projects.append({"name": d.name, "stage": stage, "site": f("index.html"), "brief": f("BRIEF.md"), "plan": f("PLAN.md"),
+                     "proposal": f("proposal", "index.html"), "pdf": f("proposal", "proposal.pdf"),
+                     "quote": (re.search(r'name="quote-number" content="(FGC-[0-9A-Z-]{6,30})"', d.joinpath("proposal", "index.html").read_text(errors="replace")) or [None, None])[1] if f("proposal", "index.html") else None,
+                     "lastChange": last[0] if len(last) == 2 else None, "lastMessage": re.sub(r"^\d{8}-\d{6}-\w+: ", "", last[1])[:120] if len(last) == 2 else None,
+                     "jobsDone": sum(1 for j in mine if j["status"] == "done")})
+projects.sort(key=lambda p: p["lastChange"] or "", reverse=True)
+print(json.dumps({"projects": projects, "jobs": jobs}))
+'''
+
+
+def main():
+    r = subprocess.run(["pct", "exec", "101", "--", "python3", "-c", COLLECT], capture_output=True, text=True, timeout=60)
+    if r.returncode: sys.exit(0)  # box 101 busy or down: the watchdog reports that; try next minute
+    data = json.loads(r.stdout)
+    body = json.dumps(data).replace("$wr$", "")
+    if len(body) > 900_000: sys.exit(0)
+    sql = ("CREATE TABLE IF NOT EXISTS felo_workroom(id int PRIMARY KEY CHECK(id=1), data jsonb NOT NULL, updated_at timestamptz NOT NULL DEFAULT now());\n"
+           "INSERT INTO felo_workroom(id,data,updated_at) VALUES(1,$wr$" + body + "$wr$::jsonb,now()) "
+           "ON CONFLICT (id) DO UPDATE SET data=EXCLUDED.data, updated_at=now();\n")
+    subprocess.run(["pct", "exec", "100", "--", "docker", "exec", "-i", "felo-codex-preview-db", "sh", "-c",
+                    'psql -XqAt -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d felo_preview'], input=sql, capture_output=True, text=True, timeout=60)
+
+
+if __name__ == "__main__":
+    main()
