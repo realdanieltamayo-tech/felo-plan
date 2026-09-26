@@ -78,3 +78,8 @@ Client work (pilot oil/energy/mining site, Odalyake) needs the step-7 coding tea
 
 ## Mapping to PROJECTS.md
 PRJ-01 = step 1 · PRJ-02/03 = step 7 (coding team + pilot) · PRJ-04 = steps 2+5+7 (one assistant, per-department tools/memory) · PRJ-05 = step 7 (email/calendar/CRM/files) · PRJ-06 = steps 7+8 · PRJ-07 = steps 3+6 · interface = step 9.
+
+## Cost (2026-09-26)
+First ~24 h on the API: about $20. Two long chats made up ~$17: Daniel's HQ chat (64 calls) and the pilot relay (80 calls), each re-reading ~100-125k tokens per call. About 70% of the cost was cache writes (Opus 5.5 $5/M), which happen after every 5-min pause and every big tool result. After-chat background reviews added ~$1.60.
+Fixed: compression at ~80k tokens (threshold 0.08, was 500k); background review off (CT101 config backup config.yaml.before-cost-*).
+Daniel to decide: Felo brain Sonnet 5 (half price) instead of Opus 5.5; reasoning high to medium.
