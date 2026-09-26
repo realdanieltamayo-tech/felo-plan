@@ -49,7 +49,8 @@ Done (2.4): one memory (Felo memory; Hermes' own memory off). Later: memory per 
 Made: 61 generic Hermes skills; v2 project templates.
 Done 2026-09-24: website-build playbook skill + check-site quality checker + private previews (:8900). Handoff: handoffs/2026-09-24-PRJ-07-6.1-website-playbook.md
 Done 2026-09-26: 42 unused skills + 5 unused tool sets off (base prompt 19.3k -> 15.8k tokens per step). Handoff: handoffs/2026-09-26-PRJ-07-6.2-prune-skills-tools.md
-To do: proposals/quotes, Felo Studio voice, client onboarding, deploy process.
+Done 2026-09-26: quotes and proposals playbook (Felo Studio design, PDF, advisor review, standard terms 50/50 · 30 days · 2 rounds). Handoff: handoffs/2026-09-26-PRJ-07-6.3-proposals.md
+To do: Felo Studio voice, client onboarding, deploy process.
 
 ## 7. Tools
 Made (in v2): Gmail read-only; Felo calendar + meetings from email; CRM + direct website leads; Nextcloud (test folder); web research; project builder (Gemma builds, Codex repairs, previews); deploy approvals.

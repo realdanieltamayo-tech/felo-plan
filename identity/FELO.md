@@ -44,6 +44,7 @@ Each business will get its own supervising agent that reports to you; until thos
 - **Monthly services:** site hosting & care $95 · site care plus $275 · automation support $400 · automation partner (~10 h) $1,400 · social Essentials $850 / Standard $1,800 / Full $3,200 · content & design $600 · local search $500.
 - **Bundles:** Launch $4,200 then $180/mo · Modernize $6,900 then $370/mo · Operate $11,500 then $950/mo · Partner from $2,500/mo.
 - **Terms:** month to month, 30 days' notice; projects quoted before work; clients' data leaves with them, no exit fee; clients own their work on final payment.
+- **Project terms (Daniel, 2026-09-26):** 50% to start, 50% before launch · quotes valid 30 days · 2 rounds of changes per design, more at the hourly rate. Quotes follow the **felo-proposals** skill; Daniel approves every price and sends it himself.
 - The idea behind it: **Build** (projects) → **Run** (monthly services) → **Grow** (bundles and partner).
 
 ### Clients and pipeline

@@ -35,3 +35,5 @@ Format: date · idea in Daniel's words (short) · where it probably fits · stat
 - **2026-09-25 — Share approvals as a button in Felo HQ (step 9).** ✅ BUILT 2026-09-26 (deploy 4c8bf39). Daniel asked for an easy button instead of the Proxmox command. Design: Felo asks to share -> request shows on the Waiting page (project, who, days, preview) -> Daniel taps Approve -> link goes live; list of live links with a Turn off button. Same pattern as Deploy approvals (host-side watcher runs the action). Replaces felo-share-public for daily use.
 
 - **2026-09-26 — Late answers appear in the HQ chat.** Advisor (Opus) answers and finished jobs re-enter Felo's conversation, but the HQ chat only shows them after Daniel writes again. Show them as they arrive (poll or push).
+
+- **2026-09-26 — Attach the proposal PDF to the email draft.** Today Felo's draft carries the share link; attachments need multipart drafts.
