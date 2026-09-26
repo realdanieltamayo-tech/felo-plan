@@ -25,7 +25,8 @@ Rule: one step at a time; each step ends with something Daniel can see and use; 
 
 ## 1. Home — the server
 Made: Proxmox (Dell) with CT100 (Felo v2, DB, lead intake) and CT101 (Hermes, builder); work PC runs Gemma + Codex bridge; lock-down done (PRJ-01 1.1); nightly encrypted off-site backups, GitHub mirror, tested restore (1.2).
-To do: CT101 code into git; down-alerts; Windows Codex bridge off-site backup; cleanup (1.3/1.4). Keep in mind: brain + Codex are down when the work PC is off.
+Done 2026-09-26 (1.3): nightly setup snapshot to git (ops/snapshot), phone down-alerts (felo-watchdog), fixed broken scheduled jobs (backup + share watcher). Handoff: handoffs/2026-09-26-PRJ-01-1.3-reliability.md
+To do: cleanup (1.4, waiting for Daniel's OK); core on ethernet (Daniel). Keep in mind: brain + Codex are down when the work PC is off.
 
 ## 2. Harness — Hermes
 Made: Hermes running on CT101, Telegram gateway, built-in skills/memory/cron/kanban/browser/web/tts.
