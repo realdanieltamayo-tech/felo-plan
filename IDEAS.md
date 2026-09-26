@@ -32,4 +32,4 @@ Format: date · idea in Daniel's words (short) · where it probably fits · stat
 
 - **2026-09-25 — Branded preview address.** Client share links use felo-hermes.tail0ff06a.ts.net today; later preview.felostudio.com (needs DNS on core + a route).
 
-- **2026-09-25 — Share approvals as a button in Felo HQ (step 9).** Daniel asked for an easy button instead of the Proxmox command. Design: Felo asks to share -> request shows on the Waiting page (project, who, days, preview) -> Daniel taps Approve -> link goes live; list of live links with a Turn off button. Same pattern as Deploy approvals (host-side watcher runs the action). Replaces felo-share-public for daily use.
+- **2026-09-25 — Share approvals as a button in Felo HQ (step 9).** ✅ BUILT 2026-09-26 (deploy 4c8bf39). Daniel asked for an easy button instead of the Proxmox command. Design: Felo asks to share -> request shows on the Waiting page (project, who, days, preview) -> Daniel taps Approve -> link goes live; list of live links with a Turn off button. Same pattern as Deploy approvals (host-side watcher runs the action). Replaces felo-share-public for daily use.
