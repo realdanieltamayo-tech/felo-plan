@@ -34,7 +34,7 @@ Done (2.1–2.6): Hermes is the one assistant; locked link v2 ⇄ Hermes; v2 cha
 ## 3. Brain
 Done 2026-09-26 (brains work together): Felo everyday = Sonnet 5; senior advisor = Opus 5.5 (delegation, important work only); chat summaries = Haiku 4.5; titles + long reading = Gemma on the work PC (free); coding = Claude Code. Handoff: handoffs/2026-09-26-PRJ-07-3.1-brain-tiers.md
 Before: brain = Claude Opus 5.5 via API key (Hermes); ALL coding = Claude Code on Daniel's Claude subscription (2.5). Codex later (IDEAS). Gemma stays only for small local jobs if useful.
-To do: model choice inside Claude (everyday vs hard tasks); watch subscription limits.
+To do: check real daily cost after a few days; watch Claude subscription limits (Claude Code).
 
 ## 4. Who it is
 Made: Hermes SOUL.md (2 KB, mostly safety); 74 facts in v2 memory; Felo Studio voice/design rules as memories.
