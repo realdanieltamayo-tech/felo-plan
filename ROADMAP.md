@@ -67,6 +67,26 @@ To do: WhatsApp (Hermes supports); Instagram + Facebook (Meta business app); Ele
 Made: Felo HQ (purple space look, orb, agents, chat, agenda) + pages (Waiting, Servers, Deploys, Calendar, Email, Memory, CRM, Projects); owner-only.
 To do: one consistent movie-AI design on every page (Codex); voice in/out; live activity; desktop/phone app.
 
+## PRJ-12 Business dashboard: Felo HQ organized like the corporation (Daniel, 2026-09-26)
+Daniel: "we have an amazing AI working on everything but the software is not well organized or easy to understand. We should
+have a process for every agent and department: where to find done and completed jobs, where we start, where to see all clients'
+websites organized, the automations, the software."
+Found: 9 of 13 sidebar items are empty placeholders; real pages (Email, Calendar, Waiting, Deploy, Shares, Servers, Memory,
+old workbench, Templates, Briefings) are hidden; Felo's real work (workroom projects, jobs, previews, proposals) is on no screen.
+Structure (each department = one menu item, same pattern everywhere: New / In progress / Waiting for you / Done):
+- Home (command center): waiting for Daniel, what Felo did today, running jobs, alerts, agenda.
+- Clients: every client with contact, leads, projects, proposals, emails, sites, money.
+- Projects & jobs (Studio): every project with its stage (brief, plan, building, review, delivered), preview, jobs done, shares, proposal.
+- Websites: every client/FGC site: live address, hosting, up/down, care plan, last change.
+- Automations: everything that runs by itself (email checks, backups, watchdog, snapshots, share helper): what, when, last result.
+- Products (software): Zubaloop, Felo Studio Cloud, printing store, THE REBUILD: status, users/subscribers, income.
+- Money: proposals, invoices, payments, monthly recurring income per business.
+- Team (agents): Felo, the advisor, the coder, later one supervisor per business: their process, work log, cost.
+- Inbox & calendar: email, drafts, calendar.
+- System: servers, deploys, shares, memory, backups, costs, settings.
+Phases (one at a time): 1 Clean menu + Home + Projects & jobs; 2 Clients hub; 3 Websites; 4 Automations;
+5 Products & Money (+ business supervisors); 6 Team page; 7 movie-style look over the whole thing (step 9).
+
 ## The businesses Felo runs (Daniel, 2026-09-24)
 Felo manages every business under FGC, each with its own **supervising agent** that reports to Felo (Felo = the boss of the department agents):
 - **Felo Studio — agency** (brand & presence, systems & infrastructure; published prices on felostudio.com)
