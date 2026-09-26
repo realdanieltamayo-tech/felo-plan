@@ -32,7 +32,8 @@ Made: Hermes running on CT101, Telegram gateway, built-in skills/memory/cron/kan
 Done (2.1–2.6): Hermes is the one assistant; locked link v2 ⇄ Hermes; v2 chat goes through Hermes; Felo tools (read, propose, act L1/L2); dev team (Claude Code).
 
 ## 3. Brain
-Made: brain = Claude Opus 5.5 via API key (Hermes); ALL coding = Claude Code on Daniel's Claude subscription (2.5). Codex later (IDEAS). Gemma stays only for small local jobs if useful.
+Done 2026-09-26 (brains work together): Felo everyday = Sonnet 5; senior advisor = Opus 5.5 (delegation, important work only); chat summaries = Haiku 4.5; titles + long reading = Gemma on the work PC (free); coding = Claude Code. Handoff: handoffs/2026-09-26-PRJ-07-3.1-brain-tiers.md
+Before: brain = Claude Opus 5.5 via API key (Hermes); ALL coding = Claude Code on Daniel's Claude subscription (2.5). Codex later (IDEAS). Gemma stays only for small local jobs if useful.
 To do: model choice inside Claude (everyday vs hard tasks); watch subscription limits.
 
 ## 4. Who it is
@@ -82,4 +83,4 @@ PRJ-01 = step 1 · PRJ-02/03 = step 7 (coding team + pilot) · PRJ-04 = steps 2+
 ## Cost (2026-09-26)
 First ~24 h on the API: about $20. Two long chats made up ~$17: Daniel's HQ chat (64 calls) and the pilot relay (80 calls), each re-reading ~100-125k tokens per call. About 70% of the cost was cache writes (Opus 5.5 $5/M), which happen after every 5-min pause and every big tool result. After-chat background reviews added ~$1.60.
 Fixed: compression at ~80k tokens (threshold 0.08, was 500k); background review off (CT101 config backup config.yaml.before-cost-*).
-Daniel to decide: Felo brain Sonnet 5 (half price) instead of Opus 5.5; reasoning high to medium.
+Decided 2026-09-26: tiers (see step 3).
