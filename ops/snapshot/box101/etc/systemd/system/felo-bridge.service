@@ -1,0 +1,9 @@
+[Unit]
+Description=Felo bridge to Hermes
+After=network-online.target
+[Service]
+ExecStart=/usr/bin/python3 /root/bin/felo-bridge.py
+Restart=always
+User=root
+[Install]
+WantedBy=multi-user.target

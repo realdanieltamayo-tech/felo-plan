@@ -1,0 +1,51 @@
+#!/bin/bash
+# Test restore: bring Felo back from the off-site copy into a sealed trial and compare with live.
+# Proxmox host. Prints counts and results only, never settings. PRJ-01 1.2, 2026-09-24.
+set -u; umask 077
+. /root/.felo-backup/env
+W=/root/felo-restore-test; rm -rf $W; mkdir -p $W
+echo "== 1. download from Boston"
+restic restore latest --tag database --target $W -q && echo "  database: $(du -h $W/felo-v2-database.sql | cut -f1)"
+restic restore latest --tag box100 --target $W -q && echo "  box 100 settings: $(du -h $W/box100-settings.tar | cut -f1)"
+mkdir -p $W/box100 && tar -C $W/box100 -xf $W/box100-settings.tar
+for f in root/felo-v2-runtime/app.run.env root/felo-v2-runtime/intake.env root/felo-v2-runtime/ntfy.env root/.ssh/felo_v2_github root/git/felo-v2.git/HEAD root/felo-plan/PROJECTS.md root/felo-codex-preview/app/preview.js root/felo-codex-preview/intake/intake.js; do
+  [ -s $W/box100/$f ] && echo "  present: $f" || echo "  MISSING: $f"; done
+echo "  restored code version: $(git --git-dir=$W/box100/root/git/felo-v2.git log --oneline -1 master)"
+# Only the pieces the trial needs go to box 100
+tar -C $W/box100 -cf $W/trial.tar root/felo-v2-runtime/app.run.env root/felo-codex-preview/app
+pct push 100 $W/felo-v2-database.sql /tmp/rt-db.sql; pct push 100 $W/trial.tar /tmp/rt-trial.tar
+shred -u $W/box100/root/felo-v2-runtime/*.env $W/trial.tar 2>/dev/null; rm -rf $W
+
+pct exec 100 -- bash -s <<'IN'
+set -u; umask 077; T=/root/rt; rm -rf $T; mkdir -p $T; tar -C $T -xf /tmp/rt-trial.tar; rm -f /tmp/rt-trial.tar
+echo "== 2. load into a throwaway database"
+docker network create --internal felo-rt >/dev/null
+docker run -d --rm --name rt-db --network felo-rt -e POSTGRES_USER=felo -e POSTGRES_PASSWORD=t -e POSTGRES_DB=felo_preview postgres:16 >/dev/null
+for i in $(seq 1 40); do docker exec rt-db pg_isready -U felo -q 2>/dev/null && break; sleep 1; done; sleep 2
+docker exec -i rt-db psql -q -U felo -d felo_preview < /tmp/rt-db.sql >/dev/null 2>&1; shred -u /tmp/rt-db.sql
+Q="select string_agg(t||'='||n, ' ' order by t) from (select relname t, n_live_tup n from pg_stat_user_tables) x"
+CNT="select string_agg(table_name||'='||(xpath('/row/c/text()',query_to_xml('select count(*) c from '||quote_ident(table_name),false,true,'')))[1]::text,' ' order by table_name) from information_schema.tables where table_schema='public' and table_type='BASE TABLE'"
+docker exec rt-db psql -At -U felo -d felo_preview -c "$CNT" | tr ' ' '\n' > $T/restored.txt
+docker exec -e PGOPTIONS="-c default_transaction_read_only=on" felo-codex-preview-db sh -c "psql -At -U \$POSTGRES_USER -d felo_preview -c \"$CNT\"" | tr ' ' '\n' > $T/live.txt
+echo "  tables: restored $(wc -l < $T/restored.txt), live $(wc -l < $T/live.txt)"
+echo "  rows: restored $(awk -F= '{s+=$2} END{print s}' $T/restored.txt), live $(awk -F= '{s+=$2} END{print s}' $T/live.txt)"
+D=$(diff $T/restored.txt $T/live.txt); [ -z "$D" ] && echo "  every table matches live exactly" || { echo "  differences (live changed since the backup, or missing data):"; echo "$D" | head -10; }
+echo "== 3. start Felo from the restored code + restored settings (sealed, no network)"
+python3 - $T/root/felo-v2-runtime/app.run.env $T/env <<'PY'
+import sys
+src,dst=sys.argv[1:]; out=[]
+for l in open(src).read().splitlines():
+    k=l.split("=",1)[0]
+    if k in ("DATABASE_URL","FELO_LEGACY_DATABASE_URL"): l=k+"=postgresql://felo:t@rt-db:5432/felo_preview"
+    out.append(l)
+out.append("FELO_EMAIL_CALENDAR_SCHEDULE=0")
+open(dst,"w").write("\n".join(out)+"\n")
+PY
+docker run -d --rm --name rt-app --network felo-rt --read-only --env-file $T/env -v $T/root/felo-codex-preview/app:/repair:ro -w /repair felo-v2-runtime:current node /repair/preview.js >/dev/null
+for i in $(seq 1 30); do sleep 2; docker logs rt-app 2>&1 | grep -qE "preview is ready|initialization failed" && break; done
+docker logs rt-app 2>&1 | grep -E "preview is ready|initialization failed" | sed 's/^/  app says: /'
+echo "  owner-login page answers: $(docker run --rm --network felo-rt node:20-alpine node -e "fetch('http://rt-app:8080/hq').then(async r=>console.log(r.status,(await r.text()).includes('Felo owner access')?'(owner check working)':''))" 2>&1)"
+echo "== 4. clean up"
+docker stop rt-app rt-db >/dev/null 2>&1; docker network rm felo-rt >/dev/null
+shred -u $T/env $T/root/felo-v2-runtime/app.run.env; rm -rf $T; echo "  trial and restored copies removed"
+IN

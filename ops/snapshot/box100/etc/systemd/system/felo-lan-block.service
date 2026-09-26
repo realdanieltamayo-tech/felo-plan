@@ -1,0 +1,12 @@
+[Unit]
+Description=Block old Felo HQ port 8080 from office LAN (Tailscale unaffected)
+After=docker.service network-online.target
+Wants=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/root/felo-lan-block.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

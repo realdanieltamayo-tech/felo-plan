@@ -1,0 +1,13 @@
+[Unit]
+Description=Felo isolated Gemma project worker
+After=network-online.target docker.service
+[Service]
+Type=simple
+EnvironmentFile=/root/felo-codex-preview/gemma-worker/worker.env
+ExecStart=/usr/bin/python3 /root/felo-codex-preview/gemma-worker/gemma_worker.py
+WorkingDirectory=/root/felo-codex-preview/gemma-worker
+Restart=on-failure
+KillMode=control-group
+TimeoutStopSec=15
+[Install]
+WantedBy=multi-user.target

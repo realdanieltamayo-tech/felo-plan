@@ -1,0 +1,14 @@
+#!/bin/bash
+# Daniel logs Felo's coder (Claude Code, in Felo's sealed workroom on box 101) into his Claude account.
+# The login is saved only inside that workroom. Nobody else sees it.
+echo "Opening Claude Code inside Felo's workroom."
+echo "1) Pick any color theme (Enter).  2) Choose: Claude account with subscription."
+echo "3) Open the link it shows in your browser, approve, copy the code, paste it here."
+echo "4) When you see the Claude Code chat box, type  /exit  and press Enter."
+echo
+pct exec 101 -- docker run -it --rm -v /root/.hermes/sandboxes/docker/default/home:/root -w /tmp \
+  nikolaik/python-nodejs:python3.11-nodejs20 /root/.npm-global/bin/claude
+echo
+pct exec 101 -- docker run --rm -v /root/.hermes/sandboxes/docker/default/home:/root -v /root/.hermes/sandboxes/docker/default/workspace:/workspace \
+  nikolaik/python-nodejs:python3.11-nodejs20 python3 /root/.felo-team/felo-team.py setup-check
+echo "If it says 'logged in', tell Claude: felo login done"

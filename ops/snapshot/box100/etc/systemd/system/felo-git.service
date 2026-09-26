@@ -1,0 +1,10 @@
+[Unit]
+Description=Felo git daemon (tailnet only)
+After=network-online.target
+
+[Service]
+ExecStart=/usr/bin/git daemon --reuseaddr --base-path=/root/git --export-all --enable=receive-pack --listen=100.81.117.27 --port=9418
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

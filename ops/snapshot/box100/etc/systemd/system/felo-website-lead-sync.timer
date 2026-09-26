@@ -1,0 +1,9 @@
+[Unit]
+Description=Check website leads for Felo CRM
+[Timer]
+OnBootSec=30s
+OnUnitInactiveSec=30s
+AccuracySec=1s
+Unit=felo-website-lead-sync.service
+[Install]
+WantedBy=timers.target

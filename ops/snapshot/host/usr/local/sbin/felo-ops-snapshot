@@ -1,0 +1,67 @@
+#!/bin/bash
+# Nightly: copy Felo's setup files (scripts, settings, identity, skills, services, crontabs) from the
+# Proxmox host, box 100 and box 101 into the plan repo (CT100 /root/felo-plan/ops/snapshot), which
+# mirrors to GitHub. Every file is scanned for secrets first; a file with anything secret-looking is
+# left OUT (only its name is listed in SKIPPED.md). Secrets live in *.env files, which are never copied.
+# Each night's changes become one commit, so any change can be seen and undone.
+set -u
+umask 077
+T=$(mktemp -d /tmp/felo-ops.XXXXXX); trap 'rm -rf "$T"' EXIT
+S=$T/snapshot; mkdir -p $S/host $S/box100 $S/box101
+
+grab() { # $1 = host|100|101, $2 = dest dir, rest = paths/globs on that machine
+  local where=$1 dest=$2; shift 2
+  local cmd='cd / && tar -cf - --ignore-failed-read --exclude="*.env" --exclude="*.env.*" --exclude="*/node_modules" --exclude="*.sqlite" --exclude="*.sqlite-*" --exclude="*.lock" --exclude="*/recovery" --exclude="*/state" --exclude="*/__pycache__" --exclude="*.pyc" $(for p in '"$*"'; do [ -e "$p" ] && echo "${p#/}"; done) 2>/dev/null'
+  if [ "$where" = host ]; then bash -c "$cmd"; else pct exec "$where" -- bash -c "$cmd"; fi | tar -xf - -C "$dest" 2>/dev/null
+}
+
+# Proxmox host
+grab host $S/host /usr/local/sbin/felo-* /usr/local/bin/felo-* /etc/cron.d/felo-*
+crontab -l > $S/host/crontab.txt 2>/dev/null
+
+# Box 100: Felo app runtime helpers, deploy/backup/mirror scripts, firewall, services (app code itself is in felo-v2 git)
+grab 100 $S/box100 /root/felo-v2-runtime/Dockerfile /root/felo-v2-runtime/package.json /root/felo-v2-runtime/*.sh \
+  /root/felo-v2-runtime/*.py /root/felo-v2-runtime/*.cjs /root/felo-v2-runtime/*.js /root/*.sh /root/*.py \
+  /usr/local/sbin/felo-* /etc/systemd/system/felo-*
+pct exec 100 -- crontab -l > $S/box100/crontab.txt 2>/dev/null
+
+# Box 101: Hermes settings + Felo identity + Felo-made skills, dev team, share + preview services, old builder code
+grab 101 $S/box101 /root/.hermes/config.yaml /root/.hermes/SOUL.md /root/.hermes/skills/*/felo-* \
+  /root/.hermes/skills/*/licensed-stock-images /root/.hermes/skills/*/static-page-visual-check \
+  /root/.hermes/skills/*/website-visual-qa /root/.hermes/skills/*/working-in-existing-codebase \
+  /root/.hermes/sandboxes/docker/default/home/.felo-team/felo-team.py \
+  /usr/local/sbin/felo-* /etc/systemd/system/felo-* /etc/systemd/system/hermes-gateway.service* \
+  /etc/felo-share /etc/cron.d/felo-* \
+  /root/felo-codex-preview/*.py /root/felo-codex-preview/gemma-worker/*.py /root/felo-codex-preview/gemma-worker/scripts \
+  /root/felo-codex-preview/backend-supervisor /root/felo-codex-preview/scripts
+pct exec 101 -- crontab -l > $S/box101/crontab.txt 2>/dev/null
+
+# Hermes config is important to keep: blank out its keys (MCP Bearer header, api keys) instead of skipping it.
+[ -f $S/box101/root/.hermes/config.yaml ] && sed -i -E 's#Bearer [A-Za-z0-9._~+/-]{16,}#Bearer <REDACTED>#g; s#^(\s*(api_key|token|secret|password)\s*:\s*).{16,}$#\1<REDACTED>#I' $S/box101/root/.hermes/config.yaml
+# Secret scan: drop any file that looks like it holds a secret.
+SECRET='sk-ant-[A-Za-z0-9_-]{20,}|(ghp|gho|ghs|github_pat)_[A-Za-z0-9_]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|AKIA[0-9A-Z]{16}|xox[abp]-[A-Za-z0-9-]{10,}|Bearer [A-Za-z0-9._~+/-]{24,}|ntfy\.sh/[A-Za-z0-9_-]{12,}|postgres(ql)?://[^:/ ]+:[^@ ]{6,}@|(password|passwd|secret|token|api_?key|client_secret)["'"'"']?\s*[=:]\s*["'"'"']?[A-Za-z0-9/+_=-]{20,}'
+: > $T/skipped
+while IFS= read -r -d '' f; do
+  if grep -qIEi -- "$SECRET" "$f" 2>/dev/null; then echo "- ${f#$S/}" >> $T/skipped; rm -f "$f"; fi
+  # big binary files are not setup: skip them too
+  if [ -f "$f" ] && [ "$(stat -c %s "$f")" -gt 2000000 ]; then echo "- ${f#$S/} (too big)" >> $T/skipped; rm -f "$f"; fi
+done < <(find $S -type f -print0)
+{ echo "# Left out of the snapshot"; echo; echo "These files looked like they contain a secret (or are too big), so they were NOT copied."
+  echo "Names only; contents never leave the server."; echo; sort $T/skipped; } > $S/SKIPPED.md
+cat > $S/README.md <<'EOF'
+# Felo setup snapshot (automatic, nightly)
+
+Copied by `felo-ops-snapshot` on the Proxmox host every night at 03:20 (then mirrored to GitHub at 03:40).
+- `host/`   Proxmox host: felo-* commands, cron jobs (share watcher, off-site backup)
+- `box100/` Felo app box: runtime helpers, deploy / backup / mirror scripts, firewall, services, crontab
+- `box101/` Hermes box: Hermes config, SOUL.md (Felo's identity), Felo's own skills, dev team (felo-team.py),
+  share + preview services, old builder code, crontab
+Secrets are never copied (*.env files are excluded and every file is scanned; see SKIPPED.md).
+The Felo app code itself lives in the felo-v2 repo; plans and handoffs in the rest of this repo.
+EOF
+
+if [ "${DRY:-}" = 1 ]; then (cd $T && find snapshot -type f | sort; echo; cat snapshot/SKIPPED.md); exit 0; fi
+# Replace ops/snapshot in the plan repo and commit if anything changed.
+tar -C $T -cf - snapshot | pct exec 100 -- bash -c 'set -e; cd /root/felo-plan; mkdir -p ops; rm -rf ops/snapshot; tar -xf - -C ops;
+  git add -A ops/snapshot; if git diff --cached --quiet; then echo "snapshot: no changes"; else
+  git -c user.name="Felo ops snapshot" -c user.email="ops@felo.invalid" commit -qm "ops snapshot $(date -u +%F)" && git push -q 2>&1 | tail -1; echo "snapshot: committed $(git log --oneline -1 | cut -c1-7)"; fi'

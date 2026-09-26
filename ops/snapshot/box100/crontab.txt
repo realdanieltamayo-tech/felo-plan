@@ -1,0 +1,4 @@
+# retired v1 20260924T124921Z: * * * * * /usr/bin/python3 /root/felo-deploy-watch.py >> /var/log/felo-deploy-watch.log 2>&1
+* * * * * /usr/bin/python3 /root/felo-v2-deploy-watch.py >> /var/log/felo-v2-deploy-watch.log 2>&1
+* * * * * /usr/bin/python3 /root/felo-v2-notify.py >> /var/log/felo-v2-notify.log 2>&1
+40 3 * * * /root/felo-github-mirror.sh

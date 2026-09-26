@@ -1,0 +1,19 @@
+{
+  "activated": true,
+  "service": "felo-backend-supervisor.service",
+  "state": "Type=notify\nWatchdogUSec=2min 30s\nActiveState=active\nSubState=running",
+  "job": "8aaf543438604912a59b119e1a579ade",
+  "syntheticCheckPassed": true,
+  "durableRestartWithoutReplay": true,
+  "counts": {
+    "done": 1
+  },
+  "existingFeloServicesRestarted": false,
+  "projectApprovalsCreated": false,
+  "publicRoutesAdded": false,
+  "sourceHashes": {
+    "backend_checks.py": "698c9c2644a8a9a2f01053297a4de1bc62cbb26384dd4ed88141ace93f0fd448",
+    "backend_supervisor.py": "ceb5363287ca40e7f0037ad74cb444ec903f19cb205a17a65bdab321366c5605"
+  },
+  "image": "sha256:8f958bdc1b4a422bfafd97cab4f69836401f616ae985d4b57a53d254f5bcb038"
+}

@@ -1,0 +1,10 @@
+[Unit]
+Description=Only box 101 (Hermes) may reach Felo's tool server on port 8090
+After=docker.service network-online.target
+Wants=docker.service
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/felo-tools-guard
+RemainAfterExit=yes
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,12 @@
+#!/bin/bash
+# Show the QR code for Felo's NEW phone-alert channel (ntfy). Scan it with the phone.
+# Run on the Proxmox server (web UI -> Shell). The channel name is never printed in chat.
+# Added 2026-09-24 for PRJ-01 1.1.
+set -euo pipefail
+topic=$(pct exec 100 -- sh -c 'sed -n "s/^NTFY_TOPIC=//p" /root/felo-v2-runtime/ntfy.env')
+[ -n "$topic" ] || { echo "No new alert channel prepared yet."; exit 1; }
+echo "Scan with your phone camera. It opens the new Felo alert channel; tap Subscribe"
+echo "(in the ntfy app: + , then paste the channel name shown under the code)."
+qrencode -t ansiutf8 -m 2 "https://ntfy.sh/$topic"
+echo "Channel name: $topic"
+echo "When subscribed, tell Claude: \"subscribed\". Claude sends a test alert, then switches Felo over."

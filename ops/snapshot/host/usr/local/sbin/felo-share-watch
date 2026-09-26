@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+"""Proxmox host: carries out Daniel's taps on the Felo Shares page (runs every minute from cron).
+
+  approved      -> box 101 makes a frozen public copy (felo-share-make) -> live + link + end time
+  off_requested -> box 101 removes that copy (felo-share-remove)       -> off
+  live, ended   -> expired (box 101's hourly cleanup deletes the copy)
+
+The Felo app only records Daniel's decisions; it cannot make anything public. Felo (Hermes)
+can only ask. The v2 database is reached through box 100's Docker socket, never HTTP.
+In-repo copy: ops/felo-share-watch.py (felo-v2)."""
+import json, re, subprocess, sys
+
+NAME = re.compile(r'^[a-z0-9][a-z0-9-]{0,40}$')
+SID = re.compile(r'/s/([A-Za-z0-9_-]{20,})/$')
+
+
+def sql(text):
+    r = subprocess.run(['pct', 'exec', '100', '--', 'docker', 'exec', '-i', 'felo-codex-preview-db', 'sh', '-c',
+                        'psql -XqAt -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d felo_preview'],
+                       input=text, capture_output=True, text=True, timeout=60)
+    if r.returncode:
+        sys.exit(0)  # table not there yet or database busy: try next minute
+    return r.stdout.strip()
+
+
+def box101(*args):
+    r = subprocess.run(['pct', 'exec', '101', '--', *args], capture_output=True, text=True, timeout=300)
+    return r.returncode, r.stdout.strip(), r.stderr.strip()
+
+
+def note(s):
+    return re.sub(r'[^A-Za-z0-9 .,:()-]', ' ', s)[:200]
+
+
+def main():
+    for line in sql("SELECT id || '|' || project || '|' || days FROM felo_shares WHERE status='approved' ORDER BY id LIMIT 5;").splitlines():
+        i, project, days = line.split('|')
+        i = int(i)
+        if not NAME.match(project) or not days.isdigit():
+            sql("UPDATE felo_shares SET status='failed', note='bad request', updated_at=now() WHERE id=%d;" % i); continue
+        code, out, err = box101('/usr/local/sbin/felo-share-make', project, days)
+        try:
+            d = json.loads(out); url = d['url']; exp = int(d['expires_epoch'])
+            assert SID.search(url) and url.startswith('https://felo-hermes.tail0ff06a.ts.net/s/')
+        except Exception:
+            sql("UPDATE felo_shares SET status='failed', note='%s', updated_at=now() WHERE id=%d;" % (note(err or out or 'could not make the copy'), i)); continue
+        sql("UPDATE felo_shares SET status='live', url='%s', expires_at=to_timestamp(%d), note=NULL, updated_at=now() WHERE id=%d;" % (url, exp, i))
+        print('live', i, project)
+    for line in sql("SELECT id || '|' || coalesce(url,'') FROM felo_shares WHERE status='off_requested' ORDER BY id LIMIT 10;").splitlines():
+        i, url = line.split('|', 1)
+        m = SID.search(url)
+        if m: box101('/usr/local/sbin/felo-share-remove', m.group(1))
+        sql("UPDATE felo_shares SET status='off', updated_at=now() WHERE id=%d;" % int(i))
+        print('off', i)
+    sql("UPDATE felo_shares SET status='expired', updated_at=now() WHERE status='live' AND expires_at < now();")
+
+
+if __name__ == '__main__':
+    main()

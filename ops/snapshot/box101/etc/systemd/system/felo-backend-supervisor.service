@@ -1,0 +1,26 @@
+[Unit]
+Description=Felo supervised backend checks
+After=docker.service
+Requires=docker.service
+StartLimitIntervalSec=0
+[Service]
+Type=notify
+NotifyAccess=main
+User=root
+ExecStart=/usr/bin/python3 /root/felo-codex-preview/backend-supervisor/code/backend_supervisor.py --root /root/felo-codex-preview/backend-supervisor/state --image sha256:8f958bdc1b4a422bfafd97cab4f69836401f616ae985d4b57a53d254f5bcb038
+Restart=always
+RestartSec=5
+WatchdogSec=150
+TimeoutStartSec=90
+TimeoutStopSec=10
+KillMode=control-group
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/root/felo-codex-preview/backend-supervisor/state
+RestrictAddressFamilies=AF_UNIX
+UMask=0077
+MemoryMax=512M
+[Install]
+WantedBy=multi-user.target

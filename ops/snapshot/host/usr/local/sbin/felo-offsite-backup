@@ -1,0 +1,50 @@
+#!/bin/bash
+# Felo off-site backup -> encrypted restic store on the Hostinger VPS (locked SFTP account).
+# Runs nightly from cron on the Proxmox host. PRJ-01 1.2, 2026-09-24.
+#   felo-offsite-backup            nightly set (+ full containers on Sundays)
+#   felo-offsite-backup --full     also the full container copies, any day
+# Restore guide: /root/felo-plan/handoffs (PRJ-01 1.2) and `restic snapshots`.
+set -uo pipefail
+. /root/.felo-backup/env
+LOG=/var/log/felo-offsite-backup.log; STATUS=/root/.felo-backup/last-status
+exec 9>/run/felo-offsite-backup.lock; flock -n 9 || { echo "already running"; exit 0; }
+FAILED=()
+log(){ echo "$(date -u +%FT%TZ) $*" | tee -a $LOG; }
+alert(){ T=$(pct exec 100 -- sh -c 'sed -n "s/^NTFY_TOPIC=//p" /root/felo-v2-runtime/ntfy.env' 2>/dev/null)
+  [ -n "$T" ] && curl -s -o /dev/null --max-time 15 -H "Title: Felo off-site backup FAILED" -H "Priority: high" -H "Tags: warning" -d "$1" "https://ntfy.sh/$T"; }
+step(){ local name=$1; shift; if out=$("$@" 2>&1); then log "ok   $name $(echo "$out" | grep -oE 'snapshot [0-9a-f]+ saved' | head -1)"; else log "FAIL $name: $(echo "$out" | tail -3 | tr '\n' ' ')"; FAILED+=("$name"); fi; }
+
+log "start"
+# 1. Felo's database (pg_dump failure fails the step: --stdin-from-command checks its exit code)
+step database restic backup -q --tag felo,database --stdin-filename felo-v2-database.sql --stdin-from-command -- \
+  pct exec 100 -- docker exec felo-codex-preview-db sh -c 'pg_dump -U "$POSTGRES_USER" -d felo_preview'
+# 2. Box 100: settings, keys, repositories, plan, ops scripts, cron
+step box100-settings restic backup -q --tag felo,box100 --stdin-filename box100-settings.tar --stdin-from-command -- \
+  pct exec 100 -- sh -c 'crontab -l > /root/.crontab.backup; tar -C / -cf - --exclude=root/felo-v2-runtime/trial --exclude=root/felo-v2-runtime/itrial \
+    root/felo-v2-runtime root/.ssh root/git root/felo-plan root/.crontab.backup root/backup-felo.sh \
+    root/felo-v2-deploy.sh root/felo-v2-deploy-watch.py root/felo-v2-notify.py root/felo-github-mirror.sh root/felo-lan-block.sh \
+    etc/systemd/system/felo-lan-block.service root/felo-codex-preview/intake root/felo-codex-preview/app'
+# 3. Box 101: Hermes + worker settings and code (not in git yet), without job outputs
+step box101-settings restic backup -q --tag felo,box101 --stdin-filename box101-settings.tar --stdin-from-command -- \
+  pct exec 101 -- sh -c 'crontab -l > /root/.crontab.backup 2>/dev/null; tar -C / -cf - --exclude="*/jobs" --exclude="*/recovery" --exclude="*/data-backups" \
+    --exclude="*/__pycache__" --exclude="*/cache" --exclude="*/audio_cache" --exclude="*/image_cache" --exclude="*/sandboxes" \
+    root/.hermes root/bin root/.crontab.backup etc/systemd/system/felo-bridge.service etc/systemd/system/felo-backend-supervisor.service \
+    etc/systemd/system/felo-gemma-preview-worker.service etc/systemd/system/felo-project-gateway.service \
+    root/felo-codex-preview/gemma-worker root/felo-codex-preview/backend-supervisor/code root/felo-codex-preview/scripts'
+# 4. Proxmox host: container definitions and Felo helpers
+step host-settings restic backup -q --tag felo,host /etc/pve /usr/local/bin/felo-set-secret /usr/local/bin/felo-alerts-qr \
+  /usr/local/sbin/felo-offsite-backup /etc/fail2ban/jail.d /etc/cron.d
+# Each part has its own tag, so the keep policy below keeps every part (one shared tag once made it keep only one part per day).
+# 5. Sundays (or --full): complete container copies from last night's local vzdump
+if [ "$(date +%u)" = 7 ] || [ "${1:-}" = "--full" ]; then
+  C100=$(ls -t /var/lib/vz/dump/vzdump-lxc-100-*.tar.zst 2>/dev/null | head -1); C101=$(ls -t /var/lib/vz/dump/vzdump-lxc-101-*.tar.zst 2>/dev/null | head -1)
+  step full-containers restic backup -q --tag felo,containers $C100 $C101
+  step keep-policy restic forget -q --tag felo --group-by tags --keep-daily 14 --keep-weekly 8 --keep-monthly 6 --prune
+  step integrity-check restic check -q --read-data-subset=5%
+fi
+if [ ${#FAILED[@]} -eq 0 ]; then
+  echo "ok $(date -u +%FT%TZ)" > $STATUS; log "done ok"
+else
+  echo "FAILED $(date -u +%FT%TZ) ${FAILED[*]}" > $STATUS; log "done with failures: ${FAILED[*]}"
+  alert "These parts failed: ${FAILED[*]}. Details: $LOG on the Proxmox server."; exit 1
+fi

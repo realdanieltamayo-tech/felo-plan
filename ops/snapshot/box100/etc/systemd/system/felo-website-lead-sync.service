@@ -1,0 +1,15 @@
+[Unit]
+Description=Felo website lead synchronization
+After=docker.service
+Requires=docker.service
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/bin/python3 /root/felo-codex-preview/scripts/sync-website-leads.py
+TimeoutStartSec=150
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+UMask=0077
+MemoryMax=256M

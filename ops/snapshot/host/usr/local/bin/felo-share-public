@@ -1,0 +1,9 @@
+#!/bin/bash
+# Daniel's switch for Felo's client preview links (public internet via Tailscale Funnel on box 101).
+# Public side shows ONLY frozen copies Felo shared (each with a long secret link that ends by itself).
+case "$1" in
+  on)  pct exec 101 -- tailscale funnel --bg --https=443 http://127.0.0.1:8096 >/dev/null && echo "Public preview links: ON" ;;
+  off) pct exec 101 -- tailscale funnel --https=443 off >/dev/null 2>&1; echo "Public preview links: OFF (links stop working; nothing is deleted)" ;;
+  status|"") if pct exec 101 -- tailscale funnel status 2>/dev/null | grep -q "Funnel on"; then echo "Public preview links: ON"; else echo "Public preview links: OFF"; fi ;;
+  *) echo "Use: felo-share-public on | off | status" ;;
+esac

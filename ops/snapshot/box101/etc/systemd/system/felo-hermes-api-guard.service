@@ -1,0 +1,10 @@
+[Unit]
+Description=Only box 100 may reach the Hermes API server (port 8642)
+Before=hermes-gateway.service
+After=network-pre.target
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/felo-hermes-api-guard
+RemainAfterExit=yes
+[Install]
+WantedBy=multi-user.target

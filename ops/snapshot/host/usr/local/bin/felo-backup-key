@@ -1,0 +1,15 @@
+#!/bin/bash
+# Show the password that unlocks Felo's off-site backups, so Daniel can save it in his password manager.
+# Run on the Proxmox server (web UI -> Shell). Never paste it into a chat. PRJ-01 1.2, 2026-09-24.
+set -euo pipefail
+P=/root/.felo-backup/restic-password
+[ -s "$P" ] || { echo "No backup password found."; exit 1; }
+echo
+echo "  Felo off-site backup password (save it in your password manager as \"Felo backup key\"):"
+echo
+echo "      $(cat "$P")"
+echo
+echo "  Also save: backup server 168.231.66.195, folder /srv/felo-backup/restic, user felo-backup."
+echo "  Without this password the backups cannot be opened - not even by Felo."
+echo "  When saved, press Enter to clear the screen."
+read -r _; clear

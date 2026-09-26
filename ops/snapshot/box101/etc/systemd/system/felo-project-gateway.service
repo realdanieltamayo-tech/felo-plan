@@ -1,0 +1,19 @@
+[Unit]
+Description=Felo private project preview gateway
+After=network-online.target felo-gemma-preview-worker.service
+Requires=felo-gemma-preview-worker.service
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/felo-codex-preview/gemma-worker
+EnvironmentFile=/root/felo-codex-preview/gemma-worker/gateway.env
+ExecStart=/usr/bin/python3 /root/felo-codex-preview/gemma-worker/preview_gateway.py --registry /root/felo-codex-preview/gemma-worker/project-registry.json --port 8093
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+[Install]
+WantedBy=multi-user.target
