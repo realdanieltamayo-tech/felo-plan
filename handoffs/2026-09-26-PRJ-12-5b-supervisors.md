@@ -13,3 +13,18 @@
 - Morning briefing prompt: step 5b mentions only businesses with status "attention" (else "All businesses OK" + MRR).
 - Watchdog AUTOMATIONS: 4 supervisor entries (alert if a supervisor fails or stops running).
 - Printing store: supervisor added when the store exists (same pattern: prompt file + cron create + AUTOMATIONS row).
+
+## Changed the same day (Daniel): LITE supervisors for businesses without real income; FULL (Sonnet) for income businesses
+- LITE (now: felo-studio, felo-studio-cloud, zubaloop, the-rebuild): Hermes jobs supervisor-<key> 07:00/04/08/12, MONITOR
+  mode with /root/.hermes/scripts/supervise-<key>.py (wrapper -> felo-supervise.py, business via FELO_SUPERVISE env).
+  The script (no AI): collects facts via Felo tools (felo_money, felo_websites, felo_new_leads, workroom jobs), compares
+  with the last report, finds problems (site down/slow/cert < 14 d, failed payment, income drop, real lead waiting 2+ days,
+  failed coding job), has Gemma (work PC) write the summary (template if Gemma is off), SAVES the report, and prints stable
+  "ATTENTION <key> | ..." lines. Hermes wakes Sonnet only when those lines change (new problem) -> prompt
+  /root/.hermes/scripts/supervisors/lite-prompt.txt: investigate, Level 1 actions, improved report; else [SILENT].
+- FULL (for businesses producing income, e.g. printing store when live): Sonnet daily job with the full prompt
+  (/root/.hermes/scripts/supervisors/<key>.txt, skill felo-supervisor):
+  hermes cron create "16 7 * * *" "$(cat .../<key>.txt)" --name supervisor-<key> --deliver local --failure-deliver local --skill felo-supervisor --skill felo-dev-team
+  (+ AUTOMATIONS row in felo-watchdog).
+- First run 2026-09-26 (manual): felo-studio attention (Sandro #19 and Lucas #25 leads still stage "new"), cloud ok, rebuild ok,
+  zubaloop attention (failed $9.99 payment Sep 22 from "Daniel A Tamayo" — probably Daniel's own/test subscription).
