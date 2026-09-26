@@ -85,7 +85,8 @@ Structure (each department = one menu item, same pattern everywhere: New / In pr
 - Inbox & calendar: email, drafts, calendar.
 - System: servers, deploys, shares, memory, backups, costs, settings.
 Order agreed with Daniel 2026-09-26: (1) dashboard phase 1, (2) PROACTIVE FELO: Felo speaks first (morning briefing, messages when something happens: lead, reply, job done; follow-up nudges; via Telegram + Home; Gemma watches, Sonnet speaks only when it matters), (3) VOICE: mic button in HQ + spoken answers (browser voice first, then ElevenLabs), Telegram voice notes; live call-style later.
-Phases (one at a time): 1 Clean menu + Home + Projects & jobs; 2 Clients hub; 3 Websites; 4 Automations;
+Phase 1 built 2026-09-26 (handoffs/2026-09-26-PRJ-12-1-menu-projects.md).
+Phases (one at a time): 1 Clean menu + Home + Projects & jobs (built); 2 Clients hub; 3 Websites; 4 Automations;
 5 Products & Money (+ business supervisors); 6 Team page; 7 movie-style look over the whole thing (step 9).
 
 ## The businesses Felo runs (Daniel, 2026-09-24)
