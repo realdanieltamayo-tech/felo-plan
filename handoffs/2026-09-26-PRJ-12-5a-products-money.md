@@ -12,3 +12,10 @@
   /root/felo-v2-runtime/stripe.env and runs apply-app-env.sh --from it. Claude never handles the key.
 - Daniel: one Stripe account for Zubaloop + Cloud; approved read-only access (2026-09-26).
 - Next: phase 5b business supervisors (one agent per business reporting to Felo), phase 6 Team, phase 7 look.
+
+## Stripe connected (2026-09-26)
+- Daniel ran `felo-set-secret stripe` from an SSH terminal on his PC: key accepted (reads OK, write refused), applied.
+  Pasting in the Proxmox web console scrambled the key (it arrived as 109 characters starting "OIr"); the command now strips
+  paste markers/whitespace, finds rk_live_ inside pasted text, names the key type, and shows only the first 8 received
+  characters. Tip for secrets: use an SSH terminal, not the web console.
+- First numbers: Zubaloop 1 paying subscription, $9.99/month; received last 30 days $9.99; 1 failed payment in 30 days.
