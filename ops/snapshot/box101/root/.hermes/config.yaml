@@ -7,6 +7,7 @@ runtime:
   nofile_soft_limit: 4096
 agent:
   max_turns: 150
+  cron_drain_timeout: 240  # 2026-09-26: a restart once cut off the 7:30 briefing; let scheduled jobs finish (up to 4 min)
   service_tier: ''
   fast_auto_seconds: 60
   verbose: false

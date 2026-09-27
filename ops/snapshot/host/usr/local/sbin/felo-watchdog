@@ -200,6 +200,10 @@ AUTOMATIONS = [
     ("github-mirror", "GitHub mirror", "Copies the Felo code and plans to your private GitHub.", "Box 100", "Daily 3:40 am", 1440, ("ran", 100)),
     ("share-expire", "Client link cleanup", "Removes client preview links whose time is up.", "Box 101", "Every hour", 60, ("ran", 101)),
     ("morning-briefing", "Morning briefing", "Felo's morning briefing on your Telegram (text and voice).", "Felo's brain", "Daily 7:30 am", 1440, ("hermes", "morning-briefing")),
+    ("supervisor-felo-studio", "Supervisor: Felo Studio", "Checks Felo Studio every morning: a script collects the numbers, the free local AI writes the report, Sonnet steps in only for new problems.", "Felo's brain", "Daily 7:00 am", 1440, ("hermes", "supervisor-felo-studio")),
+    ("supervisor-felo-studio-cloud", "Supervisor: Felo Studio Cloud", "Checks Felo Studio Cloud every morning: a script collects the numbers, the free local AI writes the report, Sonnet steps in only for new problems.", "Felo's brain", "Daily 7:04 am", 1440, ("hermes", "supervisor-felo-studio-cloud")),
+    ("supervisor-zubaloop", "Supervisor: Zubaloop", "Checks Zubaloop every morning: a script collects the numbers, the free local AI writes the report, Sonnet steps in only for new problems.", "Felo's brain", "Daily 7:08 am", 1440, ("hermes", "supervisor-zubaloop")),
+    ("supervisor-the-rebuild", "Supervisor: THE REBUILD", "Checks THE REBUILD every morning: a script collects the numbers, the free local AI writes the report, Sonnet steps in only for new problems.", "Felo's brain", "Daily 7:12 am", 1440, ("hermes", "supervisor-the-rebuild")),
     ("felo-events", "Felo speaks first", "Watches for new leads, emails and finished jobs; Felo messages you only when something is new. Quiet 10 pm - 7 am.", "Felo's brain", "Every 5 minutes", 5, ("hermes", "felo-events")),
 ]
 
@@ -282,6 +286,20 @@ def collect_automations(state):
     for r in rows: print(f"auto:{r[0]:<17} {'OK' if r[7] else ('FAIL' if r[7] is False else 'not yet')}{' OVERDUE' if r[10] else ''}")
 
 
+# ---- Team (PRJ-12 phase 6): what the AI team did and cost (from Hermes' usage records on box 101), for the Team page.
+def collect_team():
+    if not (running(100) and running(101)): return
+    code, out = in_ct(101, "/usr/local/sbin/felo-team-stats", 60)
+    if code: return
+    try: data = json.loads(out)
+    except Exception: return
+    data["workpc_up"] = http("http://100.109.89.77:11434/api/version", 8) == 200
+    body = json.dumps(data).replace("$tm$", "")
+    db("CREATE TABLE IF NOT EXISTS felo_team(id int PRIMARY KEY CHECK(id=1), data jsonb NOT NULL, updated_at timestamptz NOT NULL DEFAULT now());\n"
+       "INSERT INTO felo_team(id,data,updated_at) VALUES(1,$tm$" + body + "$tm$::jsonb,now()) ON CONFLICT(id) DO UPDATE SET data=EXCLUDED.data, updated_at=now();")
+    print("team: month to date $%s" % data.get("month_to_date"))
+
+
 def topic():
     if running(100):
         return in_ct(100, "sed -n 's/^NTFY_TOPIC=//p' /root/felo-v2-runtime/ntfy.env")[1].strip()
@@ -331,6 +349,7 @@ def main():
         print(f"{key:<8} {'OK' if not problem else 'FAIL x' + str(s['fails'])}  {problem or ''}")
     check_sites(state)
     collect_automations(state)
+    collect_team()
     json.dump(state, open(STATE, "w"), indent=1)
 
 
