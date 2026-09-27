@@ -6,9 +6,9 @@ Ideas Daniel pitches go to `IDEAS.md` — they are not worked on until they beco
 | ID | Project | Status | Active phase |
 |---|---|---|---|
 | PRJ-00 | Move from v1 to v2 + memory upgrade | **Done** (memory deploys waiting on Daniel's tap) | — |
-| PRJ-01 | Platform safety & reliability | **Active** | 1.3 (waiting for Daniel's go) |
-| PRJ-02 | Build Studio — the Developer department | Planned | — |
-| PRJ-03 | Pilot client: oil, energy & mining equipment website | Planned (built with PRJ-02) | — |
+| PRJ-01 | Platform safety & reliability | **Done** (1.1–1.4, 2026-09-26; v1 leftovers after 2026-10-24) | — |
+| PRJ-02 | Build Studio — the Developer department | **Partly built**: Claude Code dev team, website playbook, check-site, previews, share links, proposals (2026-09-24/26). Left: QA reviewer, delivery to hosting | — |
+| PRJ-03 | Pilot client: Dogo Group (oil, energy & mining equipment) | **Active with Daniel**: pitch preview built + shared; proposal FGC-2026-0926-DGO started | — |
 | PRJ-04 | Separate departments into dedicated agents | Planned | — |
 | PRJ-05 | Daily operations (email, calendar, CRM, files) | Planned | — |
 | PRJ-06 | Growth (sales, marketing, social, design, finance) | Planned | — |
@@ -16,7 +16,8 @@ Ideas Daniel pitches go to `IDEAS.md` — they are not worked on until they beco
 | PRJ-08 | Client: Odalyake (paralegal office, immigration) | On hold | — |
 | PRJ-09 | Printing & artwork store (new business) | Planned | — |
 | PRJ-10 | THE REBUILD: real estate website + CRM | Planned | — |
-| PRJ-11 | Business supervisors: one Felo agent per business, reporting to Felo | Planned | — |
+| PRJ-12 | Business dashboard (Felo HQ organized like the corporation) + proactive Felo + voice + neural look | **Done 2026-09-27** | — |
+| PRJ-11 | Business supervisors: one Felo agent per business, reporting to Felo | **Built 2026-09-26** (lite for 4 businesses; full for income businesses) | — |
 
 Order: PRJ-01 → PRJ-02 (PRJ-03 is its pilot) → PRJ-04 → PRJ-05 → PRJ-06 → PRJ-07. PRJ-08 when Daniel says.
 

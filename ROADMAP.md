@@ -1,6 +1,6 @@
 # Felo roadmap — Daniel's 9 steps
 
-Published page: https://claude.ai/artifact/A83xso7kLPuiFB4pjMbWXQ (keep in step with this file).
+Published page: https://claude.ai/artifact/A83xso7kLPuiFB4pjMbWXQ (roadmap + architecture, version 9 on 2026-09-27; keep in step with this file).
 Rule: one step at a time; each step ends with something Daniel can see and use; handoff after each.
 
 ## Decided 2026-09-24 (Daniel)
@@ -65,7 +65,7 @@ To do: WhatsApp (Hermes supports); Instagram + Facebook (Meta business app); Ele
 
 ## 9. Interface — movie-style AI
 Made: Felo HQ (purple space look, orb, agents, chat, agenda) + pages (Waiting, Servers, Deploys, Calendar, Email, Memory, CRM, Projects); owner-only.
-To do: one consistent movie-AI design on every page (Codex); voice in/out; live activity; desktop/phone app.
+Done 2026-09-26/27 (PRJ-12): working menu, every department page, neural brain on Home, one look everywhere, voice in/out. To do: late answers appear by themselves; desktop/phone app.
 
 ## PRJ-12 Business dashboard: Felo HQ organized like the corporation (Daniel, 2026-09-26)
 Daniel: "we have an amazing AI working on everything but the software is not well organized or easy to understand. We should
