@@ -110,3 +110,10 @@ PRJ-01 = step 1 · PRJ-02/03 = step 7 (coding team + pilot) · PRJ-04 = steps 2+
 First ~24 h on the API: about $20. Two long chats made up ~$17: Daniel's HQ chat (64 calls) and the pilot relay (80 calls), each re-reading ~100-125k tokens per call. About 70% of the cost was cache writes (Opus 5.5 $5/M), which happen after every 5-min pause and every big tool result. After-chat background reviews added ~$1.60.
 Fixed: compression at ~80k tokens (threshold 0.08, was 500k); background review off (CT101 config backup config.yaml.before-cost-*).
 Decided 2026-09-26: tiers (see step 3).
+
+## Finish line (Daniel, 2026-09-27: "what can we do now to finish the Felo project")
+1 Chat threads per business/project + late answers — built 2026-09-27 (handoffs/2026-09-27-finish-1-chat-threads.md)
+2 Felo as an installable app (phone + computer) · 3 Hermes update safety (re-apply local fixes) · 4 last playbooks
+(onboarding, delivery, Felo Studio voice) · 5 last tools (PDF attached to drafts, Google Calendar, Nextcloud folders) ·
+6 where client sites live + one-tap launch (Daniel decides the machine) · 7 WhatsApp (needs a number).
+Optional: Instagram/Facebook, ElevenLabs, QA reviewer. Dated: remove v1 after 2026-10-24; cost check in ~2 weeks.
