@@ -188,6 +188,7 @@ def check_sites(state):
 # Automations page. Jobs record their runs with /usr/local/bin/felo-ran (host, box 100, box 101); full box copies,
 # the box 100 database timer and Felo's own scheduled jobs (Hermes) are read where they keep their status.
 AUTOMATIONS = [
+    ("late-answers", "Late answers to chat", "Puts results that arrive later (the advisor, background work) into the right Felo HQ chat thread.", "Proxmox host", "Every minute", 1, ("ran", "host")),
     ("watchdog", "Watchdog", "Checks every part of Felo and every website; sends phone alerts.", "Proxmox host", "Every 5 minutes", 5, ("ran", "host")),
     ("share-watch", "Share button helper", "Carries out your Share and Turn off taps on the Shares page.", "Proxmox host", "Every minute", 1, ("ran", "host")),
     ("workroom-sync", "Projects & jobs sync", "Copies Felo's projects and coding jobs to the Projects & jobs page.", "Proxmox host", "Every minute", 1, ("ran", "host")),

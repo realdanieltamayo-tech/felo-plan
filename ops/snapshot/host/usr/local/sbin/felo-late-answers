@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+"""Proxmox host, every minute: late answers for Felo HQ chat threads.
+When the senior advisor (or other background work) finishes after Felo already replied, Hermes adds the result to that
+thread's conversation, but nobody sees it until Daniel writes again. This finds such results (box 101, read-only) and
+runs the app's scripts/late-answer.js for that thread (box 100): Felo reports the outcome and it appears in the thread
+as an unread message. Each result is handled once (state file). No result = no AI cost."""
+import json, os, subprocess, sys
+os.environ["PATH"] = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+STATE = "/var/lib/felo-late-answers.json"
+
+SCAN = r'''
+import json, sqlite3
+rs = sqlite3.connect("file:/root/.hermes/response_store.db?mode=ro", uri=True)
+st = sqlite3.connect("file:/root/.hermes/state.db?mode=ro", uri=True)
+out = []
+for name, rid in rs.execute("SELECT name, response_id FROM conversations WHERE name = 'felo-hq' OR name LIKE 'felo-hq-%'"):
+    row = rs.execute("SELECT data FROM responses WHERE response_id=?", (rid,)).fetchone()
+    if not row: continue
+    sid = (json.loads(row[0]) or {}).get("session_id")
+    if not sid: continue
+    last = st.execute("SELECT id, role, display_kind FROM messages WHERE session_id=? AND role IN ('user','assistant') ORDER BY id DESC LIMIT 1", (sid,)).fetchone()
+    if last and last[1] == "user" and last[2] == "async_delegation_complete":
+        out.append({"conversation": name, "message": last[0]})
+print(json.dumps(out))
+'''
+
+
+def run(cmd, timeout=60):
+    r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+    return r.returncode, r.stdout.strip(), r.stderr.strip()
+
+
+def main():
+    code, out, _ = run(["pct", "exec", "101", "--", "/usr/local/lib/hermes-agent/venv/bin/python", "-c", SCAN])
+    if code: return
+    try: pending = json.loads(out)
+    except Exception: return
+    if not pending: return
+    try: done = set(json.load(open(STATE)))
+    except Exception: done = set()
+    code, keys, _ = run(["pct", "exec", "100", "--", "docker", "exec", "felo-codex-preview-db", "sh", "-c",
+                         'psql -XqAt -U "$POSTGRES_USER" -d felo_preview -c "SELECT key FROM felo_threads"'])
+    if code != 0: return      # threads not readable (app not updated yet or busy): try next minute
+    threads = set(keys.split())
+    for p in pending:
+        mid = str(p["message"])
+        if mid in done: continue
+        conv = p["conversation"]
+        key = "general" if conv == "felo-hq" else conv[len("felo-hq-"):]
+        if key not in threads: done.add(mid); continue          # a test conversation, not a real thread
+        code, o, e = run(["pct", "exec", "100", "--", "docker", "exec", "felo-codex-preview-app", "node", "/repair/scripts/late-answer.js", key], 300)
+        print(("late answer saved in " + key) if code == 0 else ("late answer failed for " + key + ": " + (e or o)[-200:]))
+        if code == 0: done.add(mid)
+    json.dump(sorted(done)[-500:], open(STATE, "w"))
+
+
+if __name__ == "__main__":
+    main()

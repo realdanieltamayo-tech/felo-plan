@@ -1,0 +1,3 @@
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# Felo: late answers (advisor/background results) into Felo HQ chat threads, every minute.
+* * * * * root /usr/local/bin/felo-ran late-answers /usr/local/sbin/felo-late-answers >> /var/log/felo-late-answers.log 2>&1
