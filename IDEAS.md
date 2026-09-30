@@ -40,3 +40,4 @@ Format: date · idea in Daniel's words (short) · where it probably fits · stat
 
 - (2026-09-30, Daniel) Talk mode on iPhone "works, not excellent but it does the job" — polish it later (speed of understanding, fewer missed words). Touch base with Daniel first.
 - (2026-09-30) Phone alert when Felo's Claude brain is blocked (Anthropic 'API usage limits' 400). It happened 2026-09-30 12:11 CDT until 19:00 CDT and the watchdog did not notice. Small watchdog check on Hermes errors.log.
+- (2026-09-30) core has no firewall and publishes Postgres 5432, Redis 6380, Portainer 9000, Metabase, n8n and more on all addresses (office LAN/Wi-Fi). Close to localhost/Tailscale. Needs Daniel's OK (core).

@@ -123,7 +123,8 @@ posts, payments, going live, deleting, public links).
 5. Last tools — **live 2026-09-30** (PDF in drafts, Nextcloud folders). **Decision (Daniel, 2026-09-30): the calendar is the Felo calendar; Daniel has never used Google Calendar — do not connect or suggest it.**
 6. Where client sites live + one-tap launch — **waits for "Felo core"** (Daniel, 2026-09-30): Felo core = core server +
    felo-node-1 + felo-node-2, not connected together yet; Daniel may do that in another chat. Client sites go there.
-   Status 2026-09-30 evening (other chat): 3-node Docker Swarm live (core = leader), empty; first test = felo-leads, 2 replicas + node-kill failover test.
+   Status 2026-09-30 evening: 3-node Docker Swarm, 3 managers, **failover proven** (worker and leader down: 0 failed requests).
+   handoffs/2026-09-30-felo-core-cluster.md. Next: felo-leads secrets fix → registry → Cloudflare way in → #6.
 7. WhatsApp — **skipped for now** (Daniel, 2026-09-30); needs a phone number.
 Optional: Instagram/Facebook, ElevenLabs voice, QA reviewer.
 
