@@ -113,7 +113,7 @@ Decided 2026-09-26: tiers (see step 3).
 
 ## Finish line (Daniel, 2026-09-27: "what can we do now to finish the Felo project")
 1 Chat threads per business/project + late answers — built 2026-09-27 (handoffs/2026-09-27-finish-1-chat-threads.md)
-2 Felo as an installable app — built 2026-09-27 (handoffs/2026-09-27-finish-2-felo-app.md) · 3 Hermes update safety (re-apply local fixes) · 4 last playbooks
+2 Felo as an installable app — built 2026-09-27 (handoffs/2026-09-27-finish-2-felo-app.md) · 3 Hermes update safety — built 2026-09-30 (handoffs/2026-09-30-finish-3-hermes-update-safety.md) · 4 last playbooks
 (onboarding, delivery, Felo Studio voice) · 5 last tools (PDF attached to drafts, Google Calendar, Nextcloud folders) ·
 6 where client sites live + one-tap launch (Daniel decides the machine) · 7 WhatsApp (needs a number).
 Optional: Instagram/Facebook, ElevenLabs, QA reviewer. Dated: remove v1 after 2026-10-24; cost check in ~2 weeks.

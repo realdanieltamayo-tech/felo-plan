@@ -10,9 +10,9 @@ whole picture in one place. Page version: see ROADMAP.md header for the publishe
 - **All of PRJ-12 is built and deployed** (business dashboard, proactive Felo, voice, neural look) and finish-line #1
   (chat threads + late answers) and #2 (installable app).
 - **Talk mode (hands-free voice conversation) is deployed** (last deploy a751fa0). Hearing in English is correct.
-- **Waiting on Daniel's real test:** (a) Felo answers in English when he speaks English — the General chat was given a fresh
-  start on 2026-09-30 so it uses the new language rule; (b) Talk mode keeps listening after each answer on iPhone without a tap.
-- **Next build step:** finish-line #3 Hermes update safety, unless Daniel's test shows a Talk mode problem first.
+- **Daniel tested Talk mode (2026-09-30):** "works, not excellent but it does the job" — polish later (IDEAS.md).
+- **#3 Hermes update safety: built 2026-09-30** (handoffs/2026-09-30-finish-3-hermes-update-safety.md).
+- **Next build step:** finish-line #4 last playbooks. Daniel wants the Felo roots finished before a personal project.
 
 ## 2. The system
 
@@ -92,7 +92,7 @@ posts, payments, going live, deleting, public links).
 **Hermes**
 - **A Hermes API conversation keeps the instructions (SOUL.md) it started with.** After changing SOUL.md, run `felo-fresh-chats` on box 101 (backs up, gives every Felo HQ thread a fresh start; screen history stays). This is why Felo kept answering in Spanish.
 - Advisor (async delegation) results land as a user message and Hermes doesn't answer until the next message → `felo-late-answers` (host, every minute) makes Felo report them and saves an unread turn.
-- Local fixes are lost when Hermes updates: the Opus 5.5 mandatory-thinking patch (`agent/anthropic_adapter.py`) and faster-whisper in the Hermes venv (install with `/root/.hermes/bin/uv`). Finish-line #3 automates this.
+- Local fixes are lost when Hermes updates: the Opus 5.5 mandatory-thinking patch (`agent/anthropic_adapter.py`) and faster-whisper in the Hermes venv (install with `/root/.hermes/bin/uv`). Since 2026-09-30 `felo-hermes-fixes` (box 101) puts them back at every Hermes start and every 15 min.
 - Cost: long chats re-read 100k+ tokens per call and cache writes happen after every 5-minute pause. Keep compression low, use tiers, Gemma for reading/reports.
 
 **Code and files**
@@ -116,8 +116,8 @@ posts, payments, going live, deleting, public links).
 **Verify now (Daniel):** Talk mode on iPhone — English answers, keeps listening without tapping.
 
 **Finish line (one at a time):**
-3. Hermes update safety — re-apply local fixes (Opus patch, faster-whisper) automatically after updates. ← next
-4. Last playbooks — client onboarding, delivery, Felo Studio voice.
+3. Hermes update safety — **built 2026-09-30** (`felo-hermes-fixes`, box 101).
+4. Last playbooks — client onboarding, delivery, Felo Studio voice. ← next
 5. Last tools — proposal PDF attached to email drafts, Google Calendar, Nextcloud folders.
 6. Where client sites live + one-tap launch — **Daniel decides the machine**.
 7. WhatsApp — **needs a phone number** from Daniel.

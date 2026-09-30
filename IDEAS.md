@@ -37,3 +37,5 @@ Format: date · idea in Daniel's words (short) · where it probably fits · stat
 - **2026-09-26 — Late answers appear in the HQ chat.** Advisor (Opus) answers and finished jobs re-enter Felo's conversation, but the HQ chat only shows them after Daniel writes again. Show them as they arrive (poll or push).
 
 - **2026-09-26 — Attach the proposal PDF to the email draft.** Today Felo's draft carries the share link; attachments need multipart drafts.
+
+- (2026-09-30, Daniel) Talk mode on iPhone "works, not excellent but it does the job" — polish it later (speed of understanding, fewer missed words). Touch base with Daniel first.
