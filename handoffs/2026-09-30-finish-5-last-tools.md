@@ -41,3 +41,13 @@ Tools: 28 → 31.
   Branch `felo-calendar-only` (e0a0697, on the Deploy page): felo_calendar reads Google only if a connection exists,
   add-event no longer mentions Google. Onboarding playbook: kickoff times come from the Felo calendar.
   The dormant Google add/mirror code stays (does nothing without a connection).
+
+## Live test 2026-09-30 17:30 CDT (direct tool calls, same endpoint Hermes uses)
+- felo_workroom_files: test PDF (team-test/felo-attach-test.pdf) listed within a minute. OK.
+- felo_email_draft with attach: OK — draft #10 "TEST - Felo attachment check" in Daniel's Gmail Drafts (not sent).
+- Nextcloud tools: BLOCKED by the old preview limit (preview-policy restrictFiles, FELO_PREVIEW_FOLDER =
+  /Felo/Tests/Codex-Phase-One-20260920) which wraps the nextcloud module for the whole app. Unit tests used fakes.
+  Fix: branch `nextcloud-projects` (1a3e543): projectFolders() built from the unwrapped helpers, only
+  /Felo/Projects/<project>/..., list/mkdir/new file (no read/overwrite/delete); the limit stays for everything else.
+  Waiting for Deploy tap; a background job on the host re-tests after the deploy (output /root/felo-evening-tests.txt).
+- Lesson: a tool test with fakes is not enough when the app wraps a module globally — run one live call before calling it done.
