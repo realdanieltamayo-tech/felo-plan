@@ -14,7 +14,7 @@ whole picture in one place. Page version: see ROADMAP.md header for the publishe
 - **#3 Hermes update safety: built 2026-09-30** (handoffs/2026-09-30-finish-3-hermes-update-safety.md).
 - **#4 last playbooks: built 2026-09-30** (handoffs/2026-09-30-finish-4-playbooks.md); Felo test pending (API limit hit today).
 - **#5 last tools: live 2026-09-30** (deploy #790; follow-up branch felo-calendar-only waits for a Deploy tap) (branch last-tools, handoffs/2026-09-30-finish-5-last-tools.md).
-- **Next build step:** after #5 is live, #6 needs Daniel's machine decision. Daniel wants the Felo roots finished before a personal project. WhatsApp (#7) skipped for now (Daniel, 2026-09-30).
+- **Next build step:** #6 waits for the Felo core cluster (core + felo-node-1/2). Felo roots #1-#5 done; #7 WhatsApp skipped. Daniel wants the Felo roots finished before a personal project. WhatsApp (#7) skipped for now (Daniel, 2026-09-30).
 
 ## 2. The system
 
@@ -121,7 +121,8 @@ posts, payments, going live, deleting, public links).
 3. Hermes update safety — **built 2026-09-30** (`felo-hermes-fixes`, box 101).
 4. Last playbooks — **built 2026-09-30** (felo-client-onboarding, felo-delivery, felo-studio-voice).
 5. Last tools — **live 2026-09-30** (PDF in drafts, Nextcloud folders). **Decision (Daniel, 2026-09-30): the calendar is the Felo calendar; Daniel has never used Google Calendar — do not connect or suggest it.**
-6. Where client sites live + one-tap launch — **Daniel decides the machine**.
+6. Where client sites live + one-tap launch — **waits for "Felo core"** (Daniel, 2026-09-30): Felo core = core server +
+   felo-node-1 + felo-node-2, not connected together yet; Daniel may do that in another chat. Client sites go there.
 7. WhatsApp — **skipped for now** (Daniel, 2026-09-30); needs a phone number.
 Optional: Instagram/Facebook, ElevenLabs voice, QA reviewer.
 
