@@ -31,3 +31,13 @@ Tools: 28 → 31.
 - Tap Deploy. Then Felo HQ → Calendar → **Connect Google Calendar**, sign in, allow **both** (see + add events).
 - Google sign-in is still in **testing mode**: Google ends its connections after 7 days. Taking it out of testing mode
   (his to-do) stops the weekly reconnect for Gmail and Calendar.
+
+## Update 2026-09-30 evening
+- Deploy #790 is live. Hermes restarted 21:01 UTC: 31 tools registered; #3 start hook ran (status 0). Playbooks updated
+  (ops/skills-after-last-tools.py applied).
+- **Google Calendar: dropped by Daniel.** "I asked from the beginning to create our own Felo Calendar, I have never used
+  Google Calendar." The roadmap line "Google Calendar" was a misread. Daniel got redirect_uri_mismatch trying to connect
+  (Calendar uses /calendar/callback, not registered in Google Cloud) — **not needed; do not ask him to fix it.**
+  Branch `felo-calendar-only` (e0a0697, on the Deploy page): felo_calendar reads Google only if a connection exists,
+  add-event no longer mentions Google. Onboarding playbook: kickoff times come from the Felo calendar.
+  The dormant Google add/mirror code stays (does nothing without a connection).
