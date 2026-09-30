@@ -12,7 +12,8 @@ whole picture in one place. Page version: see ROADMAP.md header for the publishe
 - **Talk mode (hands-free voice conversation) is deployed** (last deploy a751fa0). Hearing in English is correct.
 - **Daniel tested Talk mode (2026-09-30):** "works, not excellent but it does the job" — polish later (IDEAS.md).
 - **#3 Hermes update safety: built 2026-09-30** (handoffs/2026-09-30-finish-3-hermes-update-safety.md).
-- **Next build step:** finish-line #4 last playbooks. Daniel wants the Felo roots finished before a personal project.
+- **#4 last playbooks: built 2026-09-30** (handoffs/2026-09-30-finish-4-playbooks.md); Felo test pending (API limit hit today).
+- **Next build step:** finish-line #5 last tools. Daniel wants the Felo roots finished before a personal project. WhatsApp (#7) skipped for now (Daniel, 2026-09-30).
 
 ## 2. The system
 
@@ -117,10 +118,10 @@ posts, payments, going live, deleting, public links).
 
 **Finish line (one at a time):**
 3. Hermes update safety — **built 2026-09-30** (`felo-hermes-fixes`, box 101).
-4. Last playbooks — client onboarding, delivery, Felo Studio voice. ← next
-5. Last tools — proposal PDF attached to email drafts, Google Calendar, Nextcloud folders.
+4. Last playbooks — **built 2026-09-30** (felo-client-onboarding, felo-delivery, felo-studio-voice).
+5. Last tools — proposal PDF attached to email drafts, Google Calendar, Nextcloud folders. ← next
 6. Where client sites live + one-tap launch — **Daniel decides the machine**.
-7. WhatsApp — **needs a phone number** from Daniel.
+7. WhatsApp — **skipped for now** (Daniel, 2026-09-30); needs a phone number.
 Optional: Instagram/Facebook, ElevenLabs voice, QA reviewer.
 
 **Dated:** remove v1 leftovers after 2026-10-24 · check the real API cost around 2026-10-10.
