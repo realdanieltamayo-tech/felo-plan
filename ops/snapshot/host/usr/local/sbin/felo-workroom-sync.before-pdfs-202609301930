@@ -3,9 +3,6 @@
 database (box 100) for the Projects & jobs page. Read-only on box 101; writes one row (felo_workroom id=1).
 Projects: name, stage, which files exist (site, brief, plan, proposal, PDF), last change, jobs done.
 Jobs: project, status, times, task and summary (shortened). No file contents beyond that.
-PDFs (finish-line #5, 2026-09-30): project PDFs up to 5 MB (e.g. proposal/proposal.pdf) are copied into felo_workroom_files
-so Felo can attach them to email drafts and save them to Nextcloud. Only new or changed ones (sha256), at most 5 per run;
-PDFs removed from the workroom are removed there too.
 In-repo copy: felo-plan ops/snapshot (nightly)."""
 import json, os, subprocess, sys
 os.environ["PATH"] = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
@@ -36,19 +33,7 @@ for d in sorted((W / "projects").iterdir()) if (W / "projects").exists() else []
                      "lastChange": last[0] if len(last) == 2 else None, "lastMessage": re.sub(r"^\d{8}-\d{6}-\w+: ", "", last[1])[:120] if len(last) == 2 else None,
                      "jobsDone": sum(1 for j in mine if j["status"] == "done")})
 projects.sort(key=lambda p: p["lastChange"] or "", reverse=True)
-import hashlib
-PRJ = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}$"); SEG = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 ._()-]{0,95}$")
-pdfs = []
-for d in sorted((W / "projects").iterdir()) if (W / "projects").exists() else []:
-    if not d.is_dir() or not PRJ.match(d.name): continue
-    for f in d.rglob("*.pdf"):
-        rel = f.relative_to(d).parts
-        if len(rel) > 4 or not all(SEG.match(x) for x in rel) or not f.is_file() or f.is_symlink(): continue
-        size = f.stat().st_size
-        if size < 5 or size > 5 * 1024 * 1024: continue
-        pdfs.append({"project": d.name, "path": "/".join(rel), "size": size, "sha": hashlib.sha256(f.read_bytes()).hexdigest()})
-        if len(pdfs) >= 200: break
-print(json.dumps({"projects": projects, "jobs": jobs, "pdfs": pdfs}))
+print(json.dumps({"projects": projects, "jobs": jobs}))
 '''
 
 
@@ -56,7 +41,6 @@ def main():
     r = subprocess.run(["pct", "exec", "101", "--", "python3", "-c", COLLECT], capture_output=True, text=True, timeout=60)
     if r.returncode: sys.exit(0)  # box 101 busy or down: the watchdog reports that; try next minute
     data = json.loads(r.stdout)
-    pdfs = data.pop("pdfs", [])
     body = json.dumps(data).replace("$wr$", "")
     if len(body) > 900_000: sys.exit(0)
     sql = ("CREATE TABLE IF NOT EXISTS felo_workroom(id int PRIMARY KEY CHECK(id=1), data jsonb NOT NULL, updated_at timestamptz NOT NULL DEFAULT now());\n"
@@ -64,40 +48,6 @@ def main():
            "ON CONFLICT (id) DO UPDATE SET data=EXCLUDED.data, updated_at=now();\n")
     subprocess.run(["pct", "exec", "100", "--", "docker", "exec", "-i", "felo-codex-preview-db", "sh", "-c",
                     'psql -XqAt -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d felo_preview'], input=sql, capture_output=True, text=True, timeout=60)
-    sync_pdfs(pdfs)
-
-
-def psql(sql, timeout=120):
-    return subprocess.run(["pct", "exec", "100", "--", "docker", "exec", "-i", "felo-codex-preview-db", "sh", "-c",
-                           'psql -XqAt -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d felo_preview'], input=sql, capture_output=True, text=True, timeout=timeout)
-
-
-def lit(s):
-    return "'" + s.replace("'", "''") + "'"
-
-
-def sync_pdfs(pdfs):
-    import base64, hashlib, re
-    ok = re.compile(r"^[A-Za-z0-9 ._()/-]{1,400}$")
-    pdfs = [p for p in pdfs if ok.match(p["project"] + "/" + p["path"]) and ".." not in p["path"]]
-    r = psql("CREATE TABLE IF NOT EXISTS felo_workroom_files(project text NOT NULL,path text NOT NULL,sha256 text NOT NULL,size integer NOT NULL,"
-             "bytes bytea NOT NULL,updated_at timestamptz NOT NULL DEFAULT now(),PRIMARY KEY(project,path));\n"
-             "SELECT project||'/'||path||' '||sha256 FROM felo_workroom_files;\n")
-    if r.returncode: return
-    have = dict(line.rsplit(" ", 1) for line in r.stdout.splitlines() if " " in line)
-    want = {p["project"] + "/" + p["path"]: p for p in pdfs}
-    for key, p in [(k, p) for k, p in want.items() if have.get(k) != p["sha"]][:5]:
-        src = "/root/.hermes/sandboxes/docker/default/workspace/projects/" + key
-        b = subprocess.run(["pct", "exec", "101", "--", "base64", "-w0", src], capture_output=True, text=True, timeout=60)
-        if b.returncode: continue
-        data = base64.b64decode(b.stdout)
-        if hashlib.sha256(data).hexdigest() != p["sha"] or not data.startswith(b"%PDF-"): continue
-        psql("INSERT INTO felo_workroom_files(project,path,sha256,size,bytes,updated_at) VALUES(%s,%s,%s,%d,decode('%s','base64'),now()) "
-             "ON CONFLICT (project,path) DO UPDATE SET sha256=EXCLUDED.sha256,size=EXCLUDED.size,bytes=EXCLUDED.bytes,updated_at=now();\n"
-             % (lit(p["project"]), lit(p["path"]), lit(p["sha"]), len(data), b.stdout.strip()))
-    gone = [k for k in have if k not in want]
-    if gone:
-        psql("".join("DELETE FROM felo_workroom_files WHERE project||'/'||path=%s;\n" % lit(k) for k in gone))
 
 
 if __name__ == "__main__":

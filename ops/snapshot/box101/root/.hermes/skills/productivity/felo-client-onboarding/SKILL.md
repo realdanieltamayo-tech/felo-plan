@@ -1,0 +1,66 @@
+---
+name: felo-client-onboarding
+description: "What Felo does when a client says yes to a Felo Studio proposal: record the win, deposit, project set-up, welcome email draft, kickoff call, what we need from the client, follow-ups. Use when Daniel says a client accepted, signed or paid, or a client email says they accept."
+version: 1.0.0
+author: Felo
+platforms: [linux]
+metadata:
+  hermes:
+    tags: [Onboarding, Client-Work, CRM, Felo]
+    related_skills: [felo-proposals, felo-studio-voice, felo-website-playbook, felo-delivery]
+---
+
+# Felo client onboarding
+
+Goal: within one day of a "yes", the client knows exactly what happens next and what we need from them, and Daniel
+has nothing left to set up by hand except the steps only he can do (invoices, sending).
+Everything the client reads follows the **felo-studio-voice** skill.
+
+## 0. Confirm the yes
+If the "yes" comes from a client email (not from Daniel), tell Daniel and wait for him to confirm. Get from the proposal
+(`/workspace/projects/<project>/proposal/`, CRM note): proposal number, what was accepted (any changes?), one-time total,
+monthly total, the 50% deposit amount. Double-check the math.
+
+## 1. CRM (Level 1, just do it)
+- Lead: `stage: won`, `next_step: "Deposit 50% ($X) — Daniel sends invoice"`.
+- Contact: `category: client`.
+- Note: "Accepted FGC-… on <date>: <scope in one line>. One-time $X, monthly $Y. Deposit $Z."
+- Task for Daniel, due today: "Send 50% deposit invoice $Z to <client> (FGC-…)". You cannot invoice or charge.
+
+## 2. Project
+- The project key is short and lowercase (e.g. `dogo`). If the workroom project exists (from the proposal) use it; link it
+  with `felo_project_link` (project, contact_id) if it isn't linked yet.
+- Client files folder in Nextcloud: `felo_nextcloud_folder` (project key, create) → `/Felo/Projects/<key>/`; tell Daniel the
+  path only when it returned ok. Save the accepted proposal there (`felo_nextcloud_save`, name = proposal number).
+- Start `BRIEF.md` right away (felo-website-playbook phase 1, or the same "Known facts / Missing" layout for other work),
+  filled from the proposal, emails and CRM. Its **Missing** list becomes the "what we need from you" list.
+
+## 3. Welcome email (draft only; Daniel sends)
+`felo_email_draft` to the client, in their language, reply in the proposal thread if there is one. Content:
+- Thank you + the one-line outcome we are building together.
+- What happens next, as 3–4 numbered steps with honest timing (deposit → kickoff call → first preview → launch).
+- **What we need from you**, a short checklist from BRIEF.md "Missing" (e.g. logo files, photos, text for About,
+  product list, who approves, domain registrar access — access is given to Daniel by phone or in person, never by email).
+- Kickoff call: offer two concrete times that are free in `felo_calendar` (Daniel's calendar is the Felo calendar;
+  weekdays, business hours Houston time).
+- The deposit invoice comes separately from Daniel.
+Tell Daniel "welcome draft ready in Gmail → Drafts" with the link, and what to check.
+
+## 4. Kickoff call
+When the client picks a time: `felo_calendar_add_event` (certain) or
+`felo_propose_calendar_event` (not certain).
+Before the call, write a one-page agenda in the project folder: goals, the BRIEF.md gaps to close, decisions needed,
+dates. After the call, update BRIEF.md and the CRM note with what was decided.
+
+## 5. Follow-ups
+- One CRM task per missing item that blocks work (due dates), tied to the contact.
+- No reply after 3 business days → draft a short, friendly follow-up (Daniel sends). Never chase more than once a week.
+- Tell Daniel in the morning briefing what is still missing and who owes it.
+
+## 6. When work starts
+Only after Daniel confirms the deposit arrived (`felo_money` may show it; otherwise ask him). Before that, preparation
+only (brief, plan, agenda) — no hours of build work. Then move to **felo-website-playbook** (sites) or the matching
+plan for other work. Lead `next_step`: "Phase: plan / build — <date> first preview".
+
+## Report to Daniel (few lines)
+Client, proposal number, deposit amount + invoice task, welcome draft link, kickoff times offered, what is missing.

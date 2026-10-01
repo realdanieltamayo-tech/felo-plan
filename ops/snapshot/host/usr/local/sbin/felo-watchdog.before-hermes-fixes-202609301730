@@ -199,7 +199,6 @@ AUTOMATIONS = [
     ("deploy-watch", "Deploy page helper", "Puts finished updates on your Deploy page and runs the deploy when you tap it.", "Box 100", "Every minute", 1, ("ran", 100)),
     ("notify", "Phone alerts: meetings and shares", "Alerts your phone about meetings Felo found in email and share requests.", "Box 100", "Every minute", 1, ("ran", 100)),
     ("github-mirror", "GitHub mirror", "Copies the Felo code and plans to your private GitHub.", "Box 100", "Daily 3:40 am", 1440, ("ran", 100)),
-    ("hermes-fixes", "Hermes update safety", "Puts Felo's local fixes back into Hermes after a Hermes update (Opus 5.5 patch, voice-note speech recognizer).", "Box 101", "Every 15 minutes and at every Hermes start", 15, ("ran", 101)),
     ("share-expire", "Client link cleanup", "Removes client preview links whose time is up.", "Box 101", "Every hour", 60, ("ran", 101)),
     ("morning-briefing", "Morning briefing", "Felo's morning briefing on your Telegram (text and voice).", "Felo's brain", "Daily 7:30 am", 1440, ("hermes", "morning-briefing")),
     ("supervisor-felo-studio", "Supervisor: Felo Studio", "Checks Felo Studio every morning: a script collects the numbers, the free local AI writes the report, Sonnet steps in only for new problems.", "Felo's brain", "Daily 7:00 am", 1440, ("hermes", "supervisor-felo-studio")),

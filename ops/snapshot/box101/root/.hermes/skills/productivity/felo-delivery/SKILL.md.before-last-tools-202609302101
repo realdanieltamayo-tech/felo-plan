@@ -1,0 +1,61 @@
+---
+name: felo-delivery
+description: "How Felo finishes and hands over a Felo Studio project: client approval, final 50%, go-live with Daniel, checks after launch, handover pack, monthly care, lessons learned. Use when a project is ready for the client's final review, launch or handover."
+version: 1.0.0
+author: Felo
+platforms: [linux]
+metadata:
+  hermes:
+    tags: [Delivery, Launch, Handover, Client-Work, Felo]
+    related_skills: [felo-website-playbook, felo-client-onboarding, felo-studio-voice, felo-proposals]
+---
+
+# Felo delivery: launch and handover
+
+A delivery is done when the client's system is live, checked, paid for, and the client knows how to use it and whom to
+call. Going live, domains, invoices and client emails are **Level 3: Daniel decides and does the sending.**
+Everything the client reads follows the **felo-studio-voice** skill.
+
+## 1. Ready for the client's final review
+- The quality gate is met (felo-website-playbook phase 4, or the project's own acceptance list): check-site PASS,
+  tests pass, facts match BRIEF.md, no placeholders, looked at on phone and desktop.
+- Count the change rounds used (2 per design included; more at the hourly rate, agreed first). Tell Daniel if the
+  client is past 2 rounds before starting more changes.
+- Ask Daniel to share the final preview (`felo_request_share`, Level 3) and draft the review email (he sends).
+- When the client approves: CRM note "Client approved final version on <date> (<who>, in <email/call>)".
+
+## 2. Final payment (terms: 50% before launch)
+- Task for Daniel, due today: "Send final 50% invoice $X to <client> (FGC-…)". Lead `next_step`: "Final 50% — then launch".
+- Go live only after Daniel confirms it is paid. The client owns the work on final payment.
+
+## 3. Go live (Daniel's tap)
+- Prepare a launch sheet for Daniel in the project folder, `LAUNCH.md`: where it will be hosted (Daniel's decision),
+  the domain, the exact DNS records needed (type, name, value), what to test after, and how to roll back.
+- You never change DNS, hosting or payment settings yourself. Daniel does, or approves the step.
+
+## 4. Right after launch (you check, then report)
+- `check-site <project>` on the final files. Then open every live page with the browser tool: it loads over HTTPS,
+  looks like the approved preview, forms reach the CRM, no preview-only text or test data.
+- `felo_website_save` (name, url, contact_id, hosted_on, care_plan, project) → Websites page, checked every 5 minutes.
+- Preview links still open (`felo_shares`): ask Daniel whether to turn them off (his Shares page).
+
+## 5. Handover pack (`HANDOVER.md` in the project, sent through an email draft)
+In the client's language, one page:
+- What we delivered (checkable list) and the live links.
+- What they own, and where their files and data are. Their data leaves with them, no exit fee.
+- How to ask for changes: who to call/email; small changes under the care plan, anything else quoted in writing first.
+- Monthly service: which plan, what it includes, that it starts at launch, month to month with 30 days' notice.
+- Logins and passwords: **never in email or documents.** Say "Daniel will give you your logins by phone or in person."
+`felo_email_draft` with the handover (Daniel sends). Tell Daniel what to check.
+
+## 6. Close in the CRM
+- Note "Delivered and live <date>: <url>". Lead `next_step`: "Care plan from <date>" (or "Delivered" if none).
+- Tasks: Daniel starts the monthly subscription if there is one; check-in with the client in 2 weeks
+  (draft a short "how is it going" email then).
+
+## 7. Lessons learned (client work improves the product)
+Write 3–5 lines in the project (`LESSONS.md`): what slowed us down, what the client liked, what to reuse next time.
+Anything general and lasting → `felo_propose_memory` (Daniel keeps or drops).
+
+## Report to Daniel (few lines)
+What went live, check results, payment status, handover draft link, care plan, open items.

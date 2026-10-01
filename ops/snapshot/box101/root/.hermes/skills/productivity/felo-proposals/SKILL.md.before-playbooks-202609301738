@@ -7,7 +7,7 @@ platforms: [linux]
 metadata:
   hermes:
     tags: [Proposal, Quote, Sales, Felo, Client-Work]
-    related_skills: [felo-website-playbook, felo-dev-team, felo-client-onboarding, felo-studio-voice]
+    related_skills: [felo-website-playbook, felo-dev-team]
 ---
 
 # Felo proposals and quotes
@@ -63,10 +63,7 @@ facts vs sources, price vs published list, math, missing scope/terms, tone for t
 Tell Daniel in a few lines: number, what is offered, one-time + monthly total, the prices that need HIS decision,
 the preview link. Then, only when he says so:
 - **Share link** for the client: `felo_request_share` (Level 3). The client link is the share link + `proposal/` (e.g. https://…/s/<id>/proposal/).
-- **Email draft** to the client with the link **and the PDF attached**: `felo_email_draft` with
-  `attach: [{file: "<project>/proposal/proposal.pdf", name: "<proposal number>.pdf"}]` (he presses Send).
-  The PDF appears in `felo_workroom_files` about a minute after `proposal-pdf`.
-- Save a copy for the client file: `felo_nextcloud_folder` (create) then `felo_nextcloud_save` (same file and name).
+- **Email draft** to the client with the link (`felo_email_draft`; he presses Send).
 Never send, share or promise a price yourself.
 
 When the client says yes → **felo-client-onboarding** skill. Proposal text follows **felo-studio-voice**.

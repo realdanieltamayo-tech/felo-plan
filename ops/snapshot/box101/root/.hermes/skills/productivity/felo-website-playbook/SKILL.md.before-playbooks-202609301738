@@ -7,7 +7,7 @@ platforms: [linux]
 metadata:
   hermes:
     tags: [Website, Playbook, Felo, Client-Work]
-    related_skills: [felo-dev-team, felo-delivery, felo-client-onboarding, felo-studio-voice]
+    related_skills: [felo-dev-team]
 ---
 
 # Felo website playbook
