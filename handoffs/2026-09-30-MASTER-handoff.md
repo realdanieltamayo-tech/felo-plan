@@ -16,6 +16,11 @@ whole picture in one place. Page version: see ROADMAP.md header for the publishe
 - **#5 last tools: live 2026-09-30** (deploy #790; follow-up branch felo-calendar-only waits for a Deploy tap) (branch last-tools, handoffs/2026-09-30-finish-5-last-tools.md).
 - **Next build step:** #6 waits for the Felo core cluster (core + felo-node-1/2). Felo roots #1-#5 done; #7 WhatsApp skipped. Daniel wants the Felo roots finished before a personal project. WhatsApp (#7) skipped for now (Daniel, 2026-09-30).
 
+**How client work flows (Daniel, 2026-10-01):** build on Proxmox with Felo (workroom, box 101) → push ready sites and
+software to Felo core (the swarm) → always keep the released copy on Proxmox as the backup and the base for updates.
+Each release is a versioned copy (git tag + image) so a bad update rolls back. Data created live on core (form entries,
+app databases, uploads) is NOT on Proxmox: it needs its own backup from core (to Proxmox + off-site).
+
 ## 2. The system
 
 | Part | Where | What it does |
