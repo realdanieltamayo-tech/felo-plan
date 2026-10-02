@@ -36,3 +36,19 @@ Test service removed; no containers or port 18094 left anywhere. Current leader:
   Portainer 9000, Metabase 3000, n8n 5678, Nextcloud 8080, finance-app 8000, provisioner 8093, OnlyOffice 8082,
   felostudio-web 8091. Anyone on the office network/Wi-Fi can reach them. Worth closing to localhost/Tailscale.
 - core is still on Wi-Fi and is currently the swarm leader (fine: any manager can lead; failover proven).
+
+## 2026-10-01 — step 1 done: felo-leads secrets fix, running on the swarm (not live yet)
+Workflow (Daniel): build on Proxmox → run on Felo core → keep the release on Proxmox.
+- Source copied from core `/home/daniel/felo-leads` (git bundle; `.env` never committed, not copied) to
+  **box 100 `/root/felo-core/felo-leads`** — now the source of truth. core's folder is the old version (left untouched).
+- Change: `_setting()` reads `/run/secrets/<name lowercase>` first, env as fallback (empty file → env); start log names the
+  source of each setting, never values. `test_config.py` (4 tests) pass in the image, sealed. Commit 4c034ba, tag **2026.10.01-1**.
+- Release kept on Proxmox: image `felo-leads:2026.10.01-1` (30a3033fb4a7) on box 100 + `/root/felo-core/felo-leads-2026.10.01-1.tar.gz`.
+  Shipped to the nodes with docker save/load (no registry yet).
+- Swarm: network **felo-edge** (overlay, encrypted, attachable). Service **felo-leads**: 2 replicas, max 1/node, not on core,
+  secrets felo_token/meta_app_secret/meta_page_token/meta_verify_token, FELO_URL + ALLOWED_ORIGIN read from core's .env at
+  create time (not shown), healthcheck /health, update start-first with auto-rollback, **no published port**.
+- Checked on both nodes: healthy; 4 keys "from secret"; each secret's fingerprint matches core's working .env; FELO_URL reachable.
+- **Not live:** real traffic still goes to the old container on core (127.0.0.1:8094). Switching = point the public way in
+  at the swarm service (step 3, Cloudflare) → Daniel's decision. After the switch, stop the old container (keep it 1 week).
+Next: step 2 private registry on Proxmox (where releases live), step 3 Cloudflare way in (Daniel creates the tunnel).
