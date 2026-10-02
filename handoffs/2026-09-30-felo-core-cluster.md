@@ -52,3 +52,23 @@ Workflow (Daniel): build on Proxmox → run on Felo core → keep the release on
 - **Not live:** real traffic still goes to the old container on core (127.0.0.1:8094). Switching = point the public way in
   at the swarm service (step 3, Cloudflare) → Daniel's decision. After the switch, stop the old container (keep it 1 week).
 Next: step 2 private registry on Proxmox (where releases live), step 3 Cloudflare way in (Daniel creates the tunnel).
+
+## 2026-10-02 — step 2 done: release store on Proxmox
+- **felo-registry** (registry:2) on **box 100**, 127.0.0.1:5000, data `/root/felo-core/registry/data` (covered by the nightly
+  box copy + Sunday off-site). Login user `felo-core`, password only in `/root/felo-core/registry/auth/password` (600).
+- Cluster address (tailnet only, real cert): **https://felo-orchestrator.tail0ff06a.ts.net:5443** (Tailscale Serve).
+  No Docker daemon changes on core/nodes. core + both nodes are logged in (docker login, root).
+- **Box 100 pushes to 127.0.0.1:5000** (its own tailnet name resolves to its LAN IP 10.1.10.191 where :5443 is not served).
+  Release flow: build on box 100 → `docker tag X 127.0.0.1:5000/<app>:<YYYY.MM.DD-n>` → push → on core:
+  `docker service update --with-registry-auth --image felo-orchestrator.tail0ff06a.ts.net:5443/<app>:<tag> <service>`.
+- felo-leads service now runs from the store (`…:5443/felo-leads:2026.10.01-1`), both copies healthy, keys from secrets.
+- **Update order must be stop-first** for 2-replica services limited to 1 per node on 2 nodes: start-first could not place the
+  new copy and the update hung (no outage; both old copies kept running). Set: stop-first, parallelism 1, delay 10 s,
+  rollback stop-first. Same rule for client sites.
+- Weekly cleanup `/usr/local/sbin/felo-registry-prune` (box 100, cron Sun 3:30, Automations row "Release store cleanup"):
+  keeps newest 5 tags per app, then garbage-collect.
+  **Never use `garbage-collect --delete-untagged`**: with Docker 29 OCI indexes it deleted the kept release's inner
+  manifests/blobs (happened once on 2026-10-02; re-pushed from box 100, proven with a fresh pull on felo-node-2).
+  Known leftover: deleted releases' inner manifests stay linked (~20 MB per removed release). Revisit if the disk grows.
+- Tested: 7 test releases → newest 5 kept, oldest 2 gone, kept ones fresh-pulled on felo-node-1; test app removed.
+Next: step 3 public way in (cloudflared as a swarm service on felo-edge) — Daniel creates the tunnel + token.
