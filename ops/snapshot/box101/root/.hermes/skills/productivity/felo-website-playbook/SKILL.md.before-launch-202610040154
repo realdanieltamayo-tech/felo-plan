@@ -67,8 +67,8 @@ check-site says PASS and it looks right. Tell Daniel after each job in 2–3 lin
 Follow the **felo-delivery** skill (final review, final 50%, go-live, handover, care plan). In short:
 
 Going live, pointing a domain, emailing the client, sending an invoice = **ask Daniel first**, every time.
-Prepare for him: preview link, what is in it, open decisions, and the price/bundle. Client sites are hosted on
-**Felo core** (launch with `felo_request_launch`, see felo-delivery). After it goes live: CRM note "Website delivered", and a task for monthly care if the
+Prepare for him: preview link, what is in it, open decisions, where it will be hosted (open decision: Daniel's own
+servers), and the price/bundle. After it goes live: CRM note "Website delivered", and a task for monthly care if the
 bundle includes it.
 Also record it with `felo_website_save` (name, url, contact_id, hosted_on, care_plan, project) so it appears on the
 Websites page and is checked every 5 minutes.

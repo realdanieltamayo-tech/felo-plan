@@ -28,21 +28,15 @@ Everything the client reads follows the **felo-studio-voice** skill.
 - Task for Daniel, due today: "Send final 50% invoice $X to <client> (FGC-…)". Lead `next_step`: "Final 50% — then launch".
 - Go live only after Daniel confirms it is paid. The client owns the work on final payment.
 
-## 3. Go live (Daniel's tap) — client sites run on **Felo core** (built on Proxmox, a copy kept there)
-- `felo_request_launch` (project, hostname = the real address, e.g. dogogroup.com, why). Level 3: it waits on the
-  Launches page; Daniel taps Launch; about 2 minutes later it runs as 2 copies with automatic rollback.
-  Only pages, styles, scripts, images and fonts are published (never notes, briefs or proposal/).
-- First launch of an address: Daniel adds it in Cloudflare (the Launches page shows exactly what). If the client's
-  domain is not in Cloudflare yet, write `LAUNCH.md` for Daniel: the domain, that its nameservers must move to
-  Cloudflare (at the client's registrar), and what to test after.
-- Follow it with `felo_launches` (status, version, whether the address answers). Updates later = a new request;
-  a bad update is rolled back by Daniel's Roll back tap (or automatically if it does not start healthy).
-- You never change DNS, hosting or payment settings yourself.
+## 3. Go live (Daniel's tap)
+- Prepare a launch sheet for Daniel in the project folder, `LAUNCH.md`: where it will be hosted (Daniel's decision),
+  the domain, the exact DNS records needed (type, name, value), what to test after, and how to roll back.
+- You never change DNS, hosting or payment settings yourself. Daniel does, or approves the step.
 
 ## 4. Right after launch (you check, then report)
 - `check-site <project>` on the final files. Then open every live page with the browser tool: it loads over HTTPS,
   looks like the approved preview, forms reach the CRM, no preview-only text or test data.
-- `felo_website_save` (name, url, contact_id, hosted_on: "Felo core", care_plan, project) → Websites page, checked every 5 minutes.
+- `felo_website_save` (name, url, contact_id, hosted_on, care_plan, project) → Websites page, checked every 5 minutes.
 - Preview links still open (`felo_shares`): ask Daniel whether to turn them off (his Shares page).
 
 ## 5. Handover pack (`HANDOVER.md` in the project, sent through an email draft)

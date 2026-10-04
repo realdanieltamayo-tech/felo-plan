@@ -1,0 +1,164 @@
+#!/usr/bin/env python3
+"""Proxmox host: launch (or roll back) a client website on Felo core (finish-line #6, 2026-10-03).
+Run ONLY by felo-launch-watch after Daniel taps Launch / Roll back on the Launches page (or by Claude for tests).
+
+  felo-site-launch <project> <hostname>      build + run a new release
+  felo-site-launch --rollback <project> <hostname>
+
+Launch = build on Proxmox, run on Felo core, keep the release on Proxmox (Daniel's workflow):
+  1. box 101: copy only the site's public files from the workroom project (pages, styles, scripts, images, fonts;
+     never dotfiles, node_modules, tests, proposal/, notes) -> tar
+  2. box 100: release YYYY.MM.DD-n = nginx (pinned, from the store) + those files; kept as
+     /root/felo-core/sites/<project>/<release>.tar.gz (newest 5) and pushed to the release store
+  3. core (swarm manager): service site-<project>: 2 copies, nodes only, network felo-edge, stop-first updates,
+     automatic rollback if the new copies are not healthy
+  4. checks: the site answers inside the cluster; and at https://<hostname>/ if Daniel added the Cloudflare route
+Prints one JSON line: {ok, release, prev_release, route_ok, note}."""
+import base64, datetime, json, os, re, subprocess, sys, tempfile, time, urllib.request, zoneinfo
+os.environ["PATH"] = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+NAME = re.compile(r"^[a-z0-9][a-z0-9-]{0,40}$")
+HOST = re.compile(r"^(?=.{4,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$")
+STORE_PUSH, STORE_PULL = "127.0.0.1:5000", "felo-orchestrator.tail0ff06a.ts.net:5443"
+BASE = STORE_PUSH + "/nginx:1.30.5-alpine"
+SITES = "/root/felo-core/sites"
+
+COLLECT = r'''
+import io, pathlib, sys, tarfile
+SRC = pathlib.Path("/root/.hermes/sandboxes/docker/default/workspace/projects")
+EXT = {".html", ".css", ".js", ".mjs", ".json", ".svg", ".png", ".jpg", ".jpeg", ".webp", ".avif", ".gif", ".ico",
+       ".woff", ".woff2", ".ttf", ".otf", ".webmanifest", ".txt", ".xml", ".pdf", ".mp4", ".webm"}
+SKIP = {"node_modules", "tests", "test", "proposal"}
+proj = (SRC / sys.argv[1]).resolve()
+if proj.parent != SRC.resolve() or not (proj / "index.html").is_file(): sys.exit("project has no index.html")
+buf = io.BytesIO(); n = total = 0
+with tarfile.open(fileobj=buf, mode="w:gz") as t:
+    for p in sorted(proj.rglob("*")):
+        rel = p.relative_to(proj)
+        if p.is_symlink() or not p.is_file() or any(x.startswith(".") or x in SKIP for x in rel.parts): continue
+        if p.suffix.lower() not in EXT or p.stat().st_size > 15_000_000: continue
+        if rel.parts[0] in ("package.json", "package-lock.json"): continue
+        total += p.stat().st_size; n += 1
+        if total > 300_000_000: sys.exit("site is larger than 300 MB")
+        t.add(p, arcname="site/" + rel.as_posix(), recursive=False)
+sys.stderr.write("files=%d bytes=%d\n" % (n, total)); sys.stdout.buffer.write(buf.getvalue())
+'''
+
+NGINX = r'''server {
+  listen 80; listen [::]:80; server_name _; server_tokens off;
+  root /usr/share/nginx/html; index index.html;
+  add_header X-Content-Type-Options nosniff always;
+  add_header Referrer-Policy strict-origin-when-cross-origin always;
+  add_header X-Frame-Options SAMEORIGIN always;
+  gzip on; gzip_types text/css application/javascript image/svg+xml application/json text/plain application/xml;
+  location = /__felo_health { access_log off; default_type text/plain; return 200 "ok\n"; }
+  location ~* \.(css|js|mjs|png|jpe?g|webp|avif|gif|svg|ico|woff2?|ttf|otf)$ { expires 1h; try_files $uri =404; }
+  location / { try_files $uri $uri/ $uri.html =404; }
+  error_page 404 /404.html;
+}
+'''
+
+
+def run(cmd, timeout=600, inp=None):
+    r = subprocess.run(cmd, capture_output=True, timeout=timeout, input=inp)
+    return r.returncode, r.stdout, r.stderr.decode(errors="replace").strip()
+
+
+def box100(script, timeout=900):
+    return run(["pct", "exec", "100", "--", "bash", "-c", script], timeout)
+
+
+def core(script, timeout=600):
+    return run(["ssh", "-o", "BatchMode=yes", "core", script], timeout)
+
+
+def out(**kw):
+    print(json.dumps(kw)); sys.exit(0 if kw.get("ok") else 1)
+
+
+def label(service):
+    c, o, _ = core("docker service inspect %s --format '{{index .Spec.Labels \"felo.release\"}}' 2>/dev/null" % service)
+    return o.decode().strip() if c == 0 else ""
+
+
+def route_ok(hostname):
+    try:
+        with urllib.request.urlopen("https://%s/__felo_health" % hostname, timeout=10) as r:
+            return r.status == 200 and r.read(10).startswith(b"ok")
+    except Exception:
+        return False
+
+
+def inside_ok(service, image):
+    c, o, e = core("docker run --rm --network felo-edge --entrypoint sh %s -c "
+                   "'wget -q -O- http://%s/__felo_health && wget -q -O- http://%s/ | head -c 300'" % (image, service, service), 180)
+    return c == 0 and o.startswith(b"ok") and b"<" in o[3:]
+
+
+def next_release(project):
+    today = datetime.datetime.now(zoneinfo.ZoneInfo("America/Chicago")).strftime("%Y.%m.%d")
+    c, o, _ = box100("curl -s -u felo-core:$(cat /root/felo-core/registry/auth/password) http://127.0.0.1:5000/v2/site-%s/tags/list" % project)
+    try: tags = json.loads(o or b"{}").get("tags") or []
+    except Exception: tags = []
+    n = max([int(t.split("-")[-1]) for t in tags if t.startswith(today + "-") and t.split("-")[-1].isdigit()] or [0]) + 1
+    return "%s-%d" % (today, n)
+
+
+def launch(project, hostname):
+    service = "site-" + project
+    c, tgz, err = run(["pct", "exec", "101", "--", "python3", "-c", COLLECT, project], 300)
+    if c != 0 or not tgz: out(ok=False, note="could not copy the site: " + (err or "unknown")[-160:])
+    release = next_release(project)
+    with tempfile.NamedTemporaryFile(suffix=".tar.gz", delete=False) as f: f.write(tgz); local = f.name
+    d = "%s/%s" % (SITES, project)
+    run(["pct", "exec", "100", "--", "mkdir", "-p", d])
+    c, _, e = run(["pct", "push", "100", local, "%s/%s.tar.gz" % (d, release)]); os.unlink(local)
+    if c != 0: out(ok=False, note="could not store the release on Proxmox: " + e[-160:])
+    dockerfile = "FROM %s\nRUN rm -rf /usr/share/nginx/html/*\nCOPY nginx.conf /etc/nginx/conf.d/default.conf\nCOPY site/ /usr/share/nginx/html/\nLABEL felo.site=%s felo.release=%s\n" % (BASE, project, release)
+    script = """set -e
+B=$(mktemp -d); trap 'rm -rf $B' EXIT; cd $B
+tar -xzf %(d)s/%(r)s.tar.gz
+echo %(df)s | base64 -d > Dockerfile; echo %(ng)s | base64 -d > nginx.conf
+chmod -R a+rX site
+docker build -q -t %(push)s/site-%(p)s:%(r)s . >/dev/null
+docker push -q %(push)s/site-%(p)s:%(r)s >/dev/null
+docker image rm %(push)s/site-%(p)s:%(r)s >/dev/null 2>&1 || true
+ls -1t %(d)s/*.tar.gz | tail -n +6 | xargs -r rm -f
+""" % {"d": d, "r": release, "p": project, "push": STORE_PUSH, "df": base64.b64encode(dockerfile.encode()).decode(), "ng": base64.b64encode(NGINX.encode()).decode()}
+    c, _, e = box100(script)
+    if c != 0: out(ok=False, release=release, note="could not build the release: " + e[-200:])
+    image = "%s/site-%s:%s" % (STORE_PULL, project, release)
+    prev = label(service)
+    if prev:
+        c, _, e = core("docker service update --detach=false --quiet --with-registry-auth --image %s --label-add felo.release=%s %s >/dev/null" % (image, release, service), 600)
+        state = core("docker service inspect %s --format '{{.UpdateStatus.State}}'" % service)[1].decode().strip()
+        if c != 0 or state.startswith("rollback"):
+            out(ok=False, release=release, prev_release=prev, note="the new version did not start healthy; the site stayed on " + prev)
+    else:
+        c, _, e = core(("docker service create --detach=false --quiet --name %s --replicas 2 --replicas-max-per-node 1 "
+                        "--constraint node.hostname!=core --with-registry-auth --network felo-edge "
+                        "--health-cmd 'wget -q -O /dev/null http://127.0.0.1/__felo_health' --health-interval 10s --health-retries 3 "
+                        "--update-order stop-first --update-parallelism 1 --update-delay 10s --update-failure-action rollback --update-monitor 20s "
+                        "--rollback-order stop-first --label felo.site=%s --label felo.release=%s %s >/dev/null") % (service, project, release, image), 600)
+        if c != 0: out(ok=False, release=release, note="could not start the site on Felo core: " + e[-200:])
+    time.sleep(5)
+    if not inside_ok(service, image):
+        out(ok=False, release=release, prev_release=prev or None, note="the site does not answer inside Felo core")
+    out(ok=True, release=release, prev_release=prev or None, route_ok=route_ok(hostname), note=None)
+
+
+def rollback(project, hostname):
+    service = "site-" + project
+    before = label(service)
+    if not before: out(ok=False, note="this site is not running on Felo core")
+    c, _, e = core("docker service rollback --detach=false --quiet %s >/dev/null" % service, 600)
+    after = label(service)
+    if c != 0 or not after or after == before: out(ok=False, release=before, note="roll back did not complete: " + e[-160:])
+    out(ok=True, release=after, prev_release=None, route_ok=route_ok(hostname), note="rolled back from " + before)
+
+
+if __name__ == "__main__":
+    a = sys.argv[1:]
+    mode = "rollback" if a and a[0] == "--rollback" else "launch"
+    if mode == "rollback": a = a[1:]
+    if len(a) != 2 or not NAME.match(a[0]) or not HOST.match(a[1]): sys.exit("usage: felo-site-launch [--rollback] <project> <hostname>")
+    (rollback if mode == "rollback" else launch)(a[0], a[1])

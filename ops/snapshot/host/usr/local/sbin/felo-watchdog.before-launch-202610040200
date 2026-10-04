@@ -191,7 +191,6 @@ AUTOMATIONS = [
     ("late-answers", "Late answers to chat", "Puts results that arrive later (the advisor, background work) into the right Felo HQ chat thread.", "Proxmox host", "Every minute", 1, ("ran", "host")),
     ("watchdog", "Watchdog", "Checks every part of Felo and every website; sends phone alerts.", "Proxmox host", "Every 5 minutes", 5, ("ran", "host")),
     ("share-watch", "Share button helper", "Carries out your Share and Turn off taps on the Shares page.", "Proxmox host", "Every minute", 1, ("ran", "host")),
-    ("launch-watch", "Website launches", "Carries out your Launch and Roll back taps: builds the site on Proxmox and runs it on Felo core.", "Proxmox host", "Every minute", 1, ("ran", "host")),
     ("workroom-sync", "Projects & jobs sync", "Copies Felo's projects and coding jobs to the Projects & jobs page.", "Proxmox host", "Every minute", 1, ("ran", "host")),
     ("ops-snapshot", "Setup snapshot to git", "Saves all setup files (scripts, settings, Felo's identity and skills) to git and GitHub.", "Proxmox host", "Daily 3:20 am", 1440, ("ran", "host")),
     ("vzdump", "Full box copies", "Full copies of box 100 and box 101 on the server (the last 2 are kept).", "Proxmox host", "Daily 4:00 am", 1440, ("vzdump",)),

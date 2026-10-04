@@ -1,0 +1,93 @@
+#!/usr/bin/env python3
+"""Proxmox host: carries out Daniel's taps on the Felo Launches page (cron, every minute; finish-line #6, 2026-10-03).
+
+  approved            -> building -> felo-site-launch <project> <hostname> -> live (older live rows -> replaced) | failed
+  rollback_requested  -> felo-site-launch --rollback                      -> live on the previous release
+  live, address not answering yet -> checked each run; turns route_ok once https://<hostname>/ answers (Daniel adds the
+                                     Cloudflare route on first launch)
+Phone alert (ntfy, same channel as the watchdog) for every launch / rollback result.
+The Felo app only records Daniel's decisions; it cannot publish anything. The database is reached through box 100's
+Docker socket, never HTTP. One run at a time (flock)."""
+import fcntl, json, os, re, subprocess, sys, urllib.request
+os.environ["PATH"] = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+NAME = re.compile(r"^[a-z0-9][a-z0-9-]{0,40}$")
+HOST = re.compile(r"^(?=.{4,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$")
+REL = re.compile(r"^\d{4}\.\d{2}\.\d{2}-\d{1,3}$")
+
+lock = open("/run/felo-launch-watch.lock", "w")
+try: fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+except OSError: sys.exit(0)  # a launch is still running
+
+
+def sql(text):
+    r = subprocess.run(["pct", "exec", "100", "--", "docker", "exec", "-i", "felo-codex-preview-db", "sh", "-c",
+                        'psql -XqAt -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d felo_preview'], input=text, capture_output=True, text=True, timeout=60)
+    if r.returncode: sys.exit(0)  # table not there yet or database busy: try next minute
+    return r.stdout.strip()
+
+
+def q(s):
+    return "NULL" if s is None else "'" + re.sub(r"[^A-Za-z0-9 .,:()/_-]", " ", str(s))[:200] + "'"
+
+
+def notify(title, body):
+    try:
+        t = subprocess.run(["pct", "exec", "100", "--", "sed", "-n", "s/^NTFY_TOPIC=//p", "/root/felo-v2-runtime/ntfy.env"],
+                           capture_output=True, text=True, timeout=20).stdout.strip()
+        if t: urllib.request.urlopen(urllib.request.Request("https://ntfy.sh/" + t, data=body.encode(), headers={"Title": title}), timeout=15)
+    except Exception: pass
+
+
+def launcher(*args):
+    r = subprocess.run(["/usr/local/sbin/felo-site-launch", *args], capture_output=True, text=True, timeout=1500)
+    try: return json.loads(r.stdout.strip().splitlines()[-1])
+    except Exception: return {"ok": False, "note": (r.stderr or r.stdout or "launcher stopped")[-160:]}
+
+
+def rel(v):
+    return v if isinstance(v, str) and REL.match(v) else None
+
+
+def main():
+    # a launch that crashed mid-way never stays "Launching…" forever
+    sql("UPDATE felo_launches SET status='failed', note='stopped before it finished; tap Launch again from a new request', updated_at=now() "
+        "WHERE status='building' AND updated_at < now() - interval '40 minutes';")
+    for line in sql("SELECT id||'|'||project||'|'||hostname FROM felo_launches WHERE status='approved' ORDER BY id LIMIT 1;").splitlines():
+        i, project, host = line.split("|"); i = int(i)
+        if not NAME.match(project) or not HOST.match(host):
+            sql("UPDATE felo_launches SET status='failed', note='bad request', updated_at=now() WHERE id=%d;" % i); continue
+        sql("UPDATE felo_launches SET status='building', updated_at=now() WHERE id=%d AND status='approved';" % i)
+        r = launcher(project, host)
+        if r.get("ok"):
+            sql("UPDATE felo_launches SET status='replaced', updated_at=now() WHERE project=%s AND status='live' AND id<>%d;\n"
+                "UPDATE felo_launches SET status='live', release=%s, prev_release=%s, route_ok=%s, note=NULL, updated_at=now() WHERE id=%d;"
+                % (q(project), i, q(rel(r.get("release"))), q(rel(r.get("prev_release"))), "true" if r.get("route_ok") else "false", i))
+            notify("Felo: %s is live" % project, "Version %s is running on Felo core (2 copies)." % r.get("release") +
+                   ("" if r.get("route_ok") else " One step left: add https://%s in Cloudflare (see the Launches page)." % host))
+        else:
+            sql("UPDATE felo_launches SET status='failed', release=%s, note=%s, updated_at=now() WHERE id=%d;" % (q(rel(r.get("release"))), q(r.get("note")), i))
+            notify("Felo: launch of %s did not go live" % project, str(r.get("note") or "see the Launches page"))
+        print("launch", i, project, r.get("ok"))
+    for line in sql("SELECT id||'|'||project||'|'||hostname FROM felo_launches WHERE status='rollback_requested' ORDER BY id LIMIT 1;").splitlines():
+        i, project, host = line.split("|"); i = int(i)
+        r = launcher("--rollback", project, host) if NAME.match(project) and HOST.match(host) else {"ok": False, "note": "bad request"}
+        if r.get("ok"):
+            sql("UPDATE felo_launches SET status='live', release=%s, prev_release=NULL, route_ok=%s, note=%s, updated_at=now() WHERE id=%d;"
+                % (q(rel(r.get("release"))), "true" if r.get("route_ok") else "false", q(r.get("note")), i))
+            notify("Felo: %s rolled back" % project, "Now running version %s." % r.get("release"))
+        else:
+            sql("UPDATE felo_launches SET status='live', note=%s, updated_at=now() WHERE id=%d;" % (q("roll back failed: " + str(r.get("note"))), i))
+            notify("Felo: roll back of %s failed" % project, str(r.get("note")))
+        print("rollback", i, project, r.get("ok"))
+    for line in sql("SELECT id||'|'||hostname FROM felo_launches WHERE status='live' AND route_ok IS NOT TRUE AND updated_at > now() - interval '30 days' LIMIT 10;").splitlines():
+        i, host = line.split("|")
+        if not HOST.match(host): continue
+        try:
+            with urllib.request.urlopen("https://%s/__felo_health" % host, timeout=10) as r:
+                if r.status == 200 and r.read(10).startswith(b"ok"):
+                    sql("UPDATE felo_launches SET route_ok=true WHERE id=%d;" % int(i)); notify("Felo: %s answers" % host, "https://%s/ is live." % host)
+        except Exception: pass
+
+
+if __name__ == "__main__":
+    main()

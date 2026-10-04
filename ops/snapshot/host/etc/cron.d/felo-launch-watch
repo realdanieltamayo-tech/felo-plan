@@ -1,0 +1,3 @@
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# Felo: carry out Daniel's Launch / Roll back taps on the Launches page (client websites on Felo core). Every minute.
+* * * * * root /usr/local/bin/felo-ran launch-watch /usr/local/sbin/felo-launch-watch >> /var/log/felo-launch-watch.log 2>&1
