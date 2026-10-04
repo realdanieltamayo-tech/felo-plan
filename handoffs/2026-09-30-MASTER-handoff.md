@@ -99,6 +99,7 @@ posts, payments, going live, deleting, public links).
 **Hermes**
 - **A Hermes API conversation keeps the instructions (SOUL.md) it started with.** After changing SOUL.md, run `felo-fresh-chats` on box 101 (backs up, gives every Felo HQ thread a fresh start; screen history stays). This is why Felo kept answering in Spanish.
 - Advisor (async delegation) results land as a user message and Hermes doesn't answer until the next message → `felo-late-answers` (host, every minute) makes Felo report them and saves an unread turn.
+- **2026-10-04:** Hermes stores those results as display-only rows the model does NOT see, so Felo only got "task finished" (tyx DB advice got stuck). Fix: felo-late-answers now pipes the stored TEXT into app/scripts/late-answer.js (lib/late-answer.js puts it in Felo's message), and scans every result of the last 2 h, not just the newest message. App branch late-answers-text (Deploy tap). Backup: felo-late-answers.before-text-202610041530.
 - Local fixes are lost when Hermes updates: the Opus 5.5 mandatory-thinking patch (`agent/anthropic_adapter.py`) and faster-whisper in the Hermes venv (install with `/root/.hermes/bin/uv`). Since 2026-09-30 `felo-hermes-fixes` (box 101) puts them back at every Hermes start and every 15 min.
 - Cost: long chats re-read 100k+ tokens per call and cache writes happen after every 5-minute pause. Keep compression low, use tiers, Gemma for reading/reports.
 
