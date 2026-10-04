@@ -126,7 +126,7 @@ posts, payments, going live, deleting, public links).
 3. Hermes update safety — **built 2026-09-30** (`felo-hermes-fixes`, box 101).
 4. Last playbooks — **built 2026-09-30** (felo-client-onboarding, felo-delivery, felo-studio-voice).
 5. Last tools — **live 2026-09-30** (PDF in drafts, Nextcloud folders). **Decision (Daniel, 2026-09-30): the calendar is the Felo calendar; Daniel has never used Google Calendar — do not connect or suggest it.**
-6. Where client sites live + one-tap launch — **built 2026-10-03** (handoffs/2026-10-03-finish-6-site-launch.md; waits for Deploy tap). Was: waits for "Felo core" (Daniel, 2026-09-30): Felo core = core server +
+6. Where client sites live + one-tap launch — **live 2026-10-04** (handoffs/2026-10-03-finish-6-site-launch.md). Was: waits for "Felo core" (Daniel, 2026-09-30): Felo core = core server +
    felo-node-1 + felo-node-2, not connected together yet; Daniel may do that in another chat. Client sites go there.
    Status 2026-09-30 evening: 3-node Docker Swarm, 3 managers, **failover proven** (worker and leader down: 0 failed requests).
    handoffs/2026-09-30-felo-core-cluster.md. felo-leads secrets fix done 2026-10-01 (runs on the swarm, not live yet). Release store done 2026-10-02. Cloudflare tunnel felo-core done 2026-10-03: **leads.felostudio.com runs on the swarm**. Next: #6.

@@ -42,3 +42,10 @@ Updates afterwards: one tap.
 - Only one rollback step via Roll back (swarm keeps one previous spec); older releases stay in the store (5) and can
   be relaunched by hand if ever needed.
 - Sites with server code (forms, databases) are not covered yet: static sites only. Forms can post to felo-leads.
+
+## 2026-10-04 after the Deploy tap (done)
+Deploys #5573 site-launch-all + #1028 nextcloud-projects live. Hermes restarted: 33 tools; #3 start check status 0.
+Playbooks updated (ops/skills-after-launch.py). Live tool test: Nextcloud create/save/list in /Felo/Projects/team-test OK,
+second save refused (no overwrite), path outside refused; felo_launches OK (empty). /launch behind owner login.
+Test PDF removed from the workroom; Nextcloud /Felo/Projects/team-test (1 test PDF) left for Daniel to delete.
+**Felo roots complete** (WhatsApp skipped by Daniel).
