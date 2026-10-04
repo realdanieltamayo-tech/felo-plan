@@ -129,11 +129,11 @@ posts, payments, going live, deleting, public links).
 6. Where client sites live + one-tap launch — **waits for "Felo core"** (Daniel, 2026-09-30): Felo core = core server +
    felo-node-1 + felo-node-2, not connected together yet; Daniel may do that in another chat. Client sites go there.
    Status 2026-09-30 evening: 3-node Docker Swarm, 3 managers, **failover proven** (worker and leader down: 0 failed requests).
-   handoffs/2026-09-30-felo-core-cluster.md. felo-leads secrets fix done 2026-10-01 (runs on the swarm, not live yet). Release store on Proxmox done 2026-10-02. Next: Cloudflare way in (Daniel's tunnel) → #6.
+   handoffs/2026-09-30-felo-core-cluster.md. felo-leads secrets fix done 2026-10-01 (runs on the swarm, not live yet). Release store done 2026-10-02. Cloudflare tunnel felo-core done 2026-10-03: **leads.felostudio.com runs on the swarm**. Next: #6.
 7. WhatsApp — **skipped for now** (Daniel, 2026-09-30); needs a phone number.
 Optional: Instagram/Facebook, ElevenLabs voice, QA reviewer.
 
-**Dated:** remove v1 leftovers after 2026-10-24 · check the real API cost around 2026-10-10.
+**Dated:** stop old felo-leads container on core after 2026-10-10 · remove v1 leftovers after 2026-10-24 · check the real API cost around 2026-10-10.
 
 **Daniel's to-dos:** core server on ethernet · Anthropic monthly spending limit · Google OAuth out of testing mode ·
 tell us where Zubaloop is hosted · dismiss test leads (Felo offered) · one real felostudio.com form test.

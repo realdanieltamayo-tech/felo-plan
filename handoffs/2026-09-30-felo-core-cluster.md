@@ -72,3 +72,23 @@ Next: step 2 private registry on Proxmox (where releases live), step 3 Cloudflar
   Known leftover: deleted releases' inner manifests stay linked (~20 MB per removed release). Revisit if the disk grows.
 - Tested: 7 test releases → newest 5 kept, oldest 2 gone, kept ones fresh-pulled on felo-node-1; test app removed.
 Next: step 3 public way in (cloudflared as a swarm service on felo-edge) — Daniel creates the tunnel + token.
+
+## 2026-10-03 — step 3 done: public way in; leads.felostudio.com LIVE on the swarm
+- Existing tunnel on core is named **artiria** (systemd cloudflared, /etc/cloudflared/config.yml): felostudio.com, www, new,
+  cloud, office, hooks, artiria, **zubaloop.com** (→ core :8090 = artiria-backend.service, /home/daniel/artiria/backend —
+  answers Daniel's to-do "where is Zubaloop hosted": on core). Left untouched.
+- New remote-managed tunnel **felo-core** (ID 91b2b8c5-…), created by Daniel. Token = swarm secret
+  `cloudflared_felo_core_token` (Daniel set it on core with read -s; never shown). Image `cloudflared:2026.7.3` mirrored in the store.
+- Service **felo-core-tunnel**: 2 replicas, nodes only, network felo-edge, `--token-file /run/secrets/...`, stop-first updates.
+- Routes (Cloudflare → Tunnels → felo-core → **Published application routes**): `leads-new.felostudio.com` (test) and
+  **`leads.felostudio.com` → http://felo-leads:8080**. Daniel deleted the old `leads` DNS record (tunnel artiria) first.
+  (UI note: DNS shows tunnel records as type "Tunnel"; "Hostname routes" is the PRIVATE kind — not for public sites.)
+- Tests: public /health OK; failover with felo-node-1 down (felo-leads + connector on it): **103/103 public requests OK**.
+  After switch: /health 200, /form preflight 200, /meta with wrong verify token 403 (real secret in use), old container 0 requests.
+  No real lead lost: old container's recent POST /form were all refused (403); no Meta posts.
+- Leftovers (Daniel/later): remove the `leads-new` test route when convenient; **stop the old felo-leads container on core
+  after 2026-10-10** (fallback until then; undo = re-add DNS leads → tunnel artiria); the artiria config still lists
+  leads (harmless, no DNS; clean at a quiet time — restarting that cloudflared blips every site on it);
+  core's /home/daniel/felo-leads is the old code — box 100 /root/felo-core/felo-leads is the source now.
+Next: finish-line #6 — client sites on the swarm with one-tap Launch (same pattern: image in store → 2-replica service →
+published application route).
