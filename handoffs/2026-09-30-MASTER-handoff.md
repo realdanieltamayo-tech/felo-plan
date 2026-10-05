@@ -159,3 +159,7 @@ PRJ-08 Odalyake (on hold) · PRJ-09 printing & artwork store · PRJ-10 THE REBUI
 
 Read this file, then ROADMAP.md "Finish line", PROJECTS.md and the newest handoff. Confirm with Daniel the one active phase,
 then work on it only, and write its handoff when done.
+
+- **2026-10-05 watchdog:** Hermes reaps a finished cron worker before it records done, so delivered briefings showed "Interrupted by shutdown" (Oct 3 + 4) and alerted Daniel. The watchdog now checks Hermes' delivery record (cron/executions.db → deliveries.db) for that error and treats a delivered run as OK (hermes_delivered()). Backup felo-watchdog.before-delivered-202610050130.
+- **2026-10-04 Gmail disconnected** ("authorization is no longer accepted") — Google testing mode ends tokens after ~7 days. Daniel: Email → Reconnect Gmail; publish the OAuth app to stop it.
+- The morning-briefing job loads the felo-dev-team skill every run (not needed; extra tokens). Clean up later.
