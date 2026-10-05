@@ -22,3 +22,6 @@ Found: felostudio.com mail = Hostinger Email (MX mx1/mx2.hostinger.com, SPF Host
 Not yet (next small steps): felo-events watching info@ for new mail (lead replies) like Gmail; Clients page showing info@ threads;
 optional sending after a one-tap batch approval (would need SMTP + an L3 approval page). Note: Felo's existing chats keep
 their old tool list until a fresh start (Hermes reloads MCP tools on restart; run felo-fresh-chats only if Felo says it lacks them).
+
+## 2026-10-05 tools reload
+/reload-mcp works only as a Telegram command while that chat is idle; the API (Felo HQ) does not run slash commands. Daniel's reload did not reach Hermes (no new "registered" line). Installed CT101 /root/reload-when-idle.sh, started as transient unit felo-reload-when-idle: waits until no conversation turn is open in agent.log (the Tyx job was polling a build every 3 min), then restarts hermes-gateway (max 6 h). Check: grep registered /root/.hermes/logs/agent.log | tail -1 -> 36 tools.
