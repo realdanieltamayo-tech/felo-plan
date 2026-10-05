@@ -14,8 +14,8 @@
 
 Projects live in /workspace/projects/<project> (one git repo each; every job is one commit,
 so any job can be undone with git revert). Job logs: /workspace/jobs/<job>/.
-Claude Code may only read/write files in the project folder and run its tests: no other
-commands, no deploys, pushes, emails or servers.
+Claude Code may only read/write files in the project folder, install npm packages (official registry, install scripts
+off) and run its tests: no other commands, no deploys, pushes, emails or servers.
 """
 import json, os, re, subprocess, sys, time, pathlib, urllib.request
 from html.parser import HTMLParser
@@ -25,14 +25,19 @@ PROJECTS = pathlib.Path('/workspace/projects')
 JOBS = pathlib.Path('/workspace/jobs')
 CLAUDE = HOME / '.npm-global/bin/claude'
 NAME = re.compile(r'^[a-z0-9][a-z0-9-]{0,40}$')
-ALLOWED = ['Read', 'Edit', 'Write', 'Glob', 'Grep', 'Bash(npm test:*)', 'Bash(npm run test:*)', 'Bash(python3 -m pytest:*)']
+ALLOWED = ['Read', 'Edit', 'Write', 'Glob', 'Grep', 'Bash(npm test:*)', 'Bash(npm run test:*)', 'Bash(python3 -m pytest:*)',
+           'Bash(npm install:*)', 'Bash(npm ci:*)', 'Bash(npm view:*)', 'Bash(npm ls:*)']  # packages: npm registry only (Daniel, 2026-10-05)
+# Package installs: the official npm registry only, and install scripts OFF (the usual way a bad package runs code).
+NPM_ENV = {'npm_config_registry': 'https://registry.npmjs.org/', 'npm_config_ignore_scripts': 'true',
+           'npm_config_audit': 'false', 'npm_config_fund': 'false', 'npm_config_update_notifier': 'false'}
 
 RULES = """
 RULES (from Felo, your manager):
 - You are Felo Global's software engineer, backend AND frontend. Clients are professionals: write clean, secure, production-quality code.
 - Frontend must look modern and polished like a high-performance company site: strong typography, generous spacing, responsive down
   to phone width, accessible (contrast, alt text, labels), no broken links, no lorem ipsum. Images: inline SVG or CSS, never hotlinked.
-- Work only inside this folder. You can read, write and edit files and run the tests (npm test / pytest); nothing else.
+- Work only inside this folder. You can read, write and edit files, install packages from the npm registry (npm install / npm ci;
+  install scripts are switched off) and run the tests (npm test / pytest); nothing else.
 - Write tests for logic you build and run them until they pass.
 - Never deploy, push, send email, call payment services, or connect to any server. Never store secrets; use placeholders like
   process.env.NAME and list them in README.
@@ -83,6 +88,7 @@ def build(name, task):
     if not CLAUDE.exists(): sys.exit('Claude Code is not installed in the workroom.')
     if not (HOME / '.claude/.credentials.json').exists(): sys.exit('Claude Code is not logged in yet. Tell Daniel.')
     env = {k: v for k, v in os.environ.items() if k not in ('ANTHROPIC_API_KEY', 'ANTHROPIC_AUTH_TOKEN')}  # subscription only, never paid API
+    env.update(NPM_ENV)
     proj = project(name); j, meta = new_job('build', proj, task)
     out(f"Started {meta['job']} (Claude Code, project {name}). This can take several minutes.")
     try:
@@ -109,8 +115,9 @@ def review(name):
     out('Project files:\n' + git(proj, 'ls-files').stdout[:4000])
     pkg = proj / 'package.json'
     if pkg.exists() and json.loads(pkg.read_text() or '{}').get('scripts', {}).get('test'):
-        if not (proj / 'node_modules').exists(): subprocess.run(['npm', 'install', '--no-audit', '--no-fund'], cwd=proj, capture_output=True, timeout=600)
-        r = subprocess.run(['npm', 'test'], cwd=proj, capture_output=True, text=True, timeout=900)
+        env = {**os.environ, **NPM_ENV}
+        if not (proj / 'node_modules').exists(): subprocess.run(['npm', 'install'], cwd=proj, env=env, capture_output=True, timeout=600)
+        r = subprocess.run(['npm', 'test'], cwd=proj, env=env, capture_output=True, text=True, timeout=900)
         out(f"TESTS (npm test): {'PASS' if r.returncode == 0 else 'FAIL'}\n" + (r.stdout + r.stderr)[-4000:])
     elif any(proj.glob('test*')) or any(proj.glob('tests/*.py')):
         r = subprocess.run([sys.executable, '-m', 'pytest', '-q'], cwd=proj, capture_output=True, text=True, timeout=900)

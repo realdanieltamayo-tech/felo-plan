@@ -8,7 +8,7 @@ The alert channel name is read from box 100 when needed (from its disk if box 10
 never stored here or printed.  In-repo copy: felo-plan ops/snapshot (nightly).
 Test alert:  felo-watchdog --test
 """
-import json, os, re, shlex, socket, ssl, subprocess, sys, time, urllib.request, urllib.parse, datetime
+import json, os, re, socket, ssl, subprocess, sys, time, urllib.request, urllib.parse, datetime
 os.environ["PATH"] = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 STATE = "/var/lib/felo-watchdog/state.json"
 SERVERS = "https://felo-orchestrator.tail0ff06a.ts.net:8443/servers"
@@ -69,41 +69,6 @@ def c_voice():
     code, out = in_ct(100, "docker inspect -f '{{.State.Running}}' felo-voice")
     return None if out == "true" else "Felo's voice service is stopped: Felo HQ falls back to the browser voice. Fix: /root/felo-v2-work/voice/run.sh on box 100."
 
-_ANTHROPIC = r"""
-import re, datetime, subprocess
-def tail(f, n): return subprocess.run(["tail", "-n", str(n), f], capture_output=True, text=True).stdout.splitlines()
-TS = re.compile(r"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})")
-block = None
-for line in tail("/root/.hermes/logs/errors.log", 4000):
-    m = TS.match(line)
-    if not m: continue
-    if "credit balance is too low" in line: block = (m.group(1), "credits", "")
-    elif "API usage limits" in line:
-        w = re.search(r"regain access on ([0-9-]+ at [0-9:]+ UTC)", line); block = (m.group(1), "limit", w.group(1) if w else "")
-    elif "invalid x-api-key" in line or "authentication_error" in line: block = (m.group(1), "key", "")
-ok = None
-for line in tail("/root/.hermes/logs/agent.log", 6000):
-    m = TS.match(line)
-    if m and re.search(r"API call #\d+: model=\S+ provider=anthropic", line): ok = m.group(1)
-now = datetime.datetime.now()
-if block and (not ok or block[0] > ok) and (now - datetime.datetime.strptime(block[0], "%Y-%m-%d %H:%M:%S")).total_seconds() < 6 * 3600:
-    print("|".join(block))
-"""
-
-
-def c_anthropic():
-    """Anthropic refusing Felo's requests (out of credits / usage limit / key rejected): Felo cannot think at all.
-    Added 2026-10-05 after two silent outages (2026-09-30 usage limit, 2026-10-04 credits)."""
-    if not running(101): return None  # box 101 down is its own alert
-    code, out = in_ct(101, "python3 -c " + shlex.quote(_ANTHROPIC), 40)
-    if code != 0 or not out.strip(): return None
-    when, kind, extra = (out.strip().split("|") + ["", ""])[:3]
-    base = "Felo cannot think right now (chat, Telegram, briefing, advisor): "
-    if kind == "credits": return base + "the Anthropic account is out of credits. Add credits at console.anthropic.com, Plans & Billing."
-    if kind == "limit": return base + "the Anthropic account reached its usage limit" + (" until " + extra if extra else "") + ". Raise it at console.anthropic.com, Limits."
-    return base + "Anthropic rejected the API key. Check it at console.anthropic.com, API keys."
-
-
 def c_hermes():
     if not running(101): return "Box 101 is off, so Felo (Hermes) cannot answer."
     code, out = in_ct(100, "curl -s -o /dev/null -m 10 -w '%{http_code}' http://100.94.252.30:8642/v1/health")  # only box 100 may reach it
@@ -157,7 +122,6 @@ CHECKS = [
     ("db", "Felo database", c_db, 2, False),
     ("intake", "Website lead form", c_intake, 2, False),
     ("hermes", "Felo's brain (Hermes)", c_hermes, 2, False),
-    ("anthropic", "Felo's AI account (Anthropic)", c_anthropic, 1, False),
     ("voice", "Felo HQ voice", c_voice, 3, False),
     ("share", "Client preview links", c_share, 2, False),
     ("backup", "Off-site backup", c_backup, 1, False),
@@ -258,23 +222,6 @@ def _ran_records(where):
     return recs
 
 
-_DELIVERED = r"""
-import sqlite3, sys
-x = sqlite3.connect("file:/root/.hermes/cron/executions.db?mode=ro", uri=True)
-d = sqlite3.connect("file:/root/.hermes/cron/deliveries.db?mode=ro", uri=True)
-r = x.execute("SELECT id FROM executions WHERE job_id=? ORDER BY rowid DESC LIMIT 1", (sys.argv[1],)).fetchone()
-ok = bool(r) and bool(d.execute("SELECT 1 FROM deliveries WHERE execution_id=? AND status='delivered'", (r[0],)).fetchone())
-print("yes" if ok else "no")
-"""
-
-
-def hermes_delivered(job_id):
-    """Did the latest run of this Hermes cron job reach Daniel (Telegram)? Read-only, box 101."""
-    if not re.fullmatch(r"[0-9a-f]{6,64}", str(job_id)): return False
-    try: return in_ct(101, "python3 -c " + shlex.quote(_DELIVERED) + " " + job_id)[1].strip() == "yes"
-    except Exception: return False
-
-
 def collect_automations(state):
     if not running(100): return
     ran = {w: _ran_records(w) for w in ("host", 100, 101)}
@@ -316,10 +263,6 @@ def collect_automations(state):
                 if j.get("next_run_at"): nxt = int(datetime.datetime.fromisoformat(j["next_run_at"]).timestamp())
             except Exception: pass
             if j.get("last_status"): ok = j["last_status"] in ("ok", "success", "silent", "skipped"); detail = "" if ok else (str(j.get("last_error") or j["last_status"]))[:150]
-            # Hermes quirk (2026-10-03/04): its cleanup reaps a finished cron worker before it records "done", so a run
-            # that WAS delivered shows "Interrupted by shutdown". Trust Hermes' own delivery record for that run.
-            if not ok and "Interrupted by shutdown" in str(j.get("last_error") or "") and j.get("id") and hermes_delivered(j["id"]):
-                ok = True; detail = ""
             if not j: detail = "job not found in Hermes"; ok = False
         overdue = bool(last) and (time.time() - last) / 60 > max(every * 3, every + 30)
         rows.append((key, title, what, where, sched, every, last, ok, detail, nxt, overdue))
