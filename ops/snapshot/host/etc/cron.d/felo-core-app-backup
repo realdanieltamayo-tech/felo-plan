@@ -1,0 +1,3 @@
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# Felo core app data (tyxcrm database + documents) -> Proxmox, nightly 04:10 (off-site at 04:30 includes it).
+10 4 * * * root /usr/local/bin/felo-ran core-app-backup /usr/local/sbin/felo-core-app-backup >> /var/log/felo-core-app-backup.log 2>&1

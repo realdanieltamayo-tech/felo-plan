@@ -1,0 +1,3 @@
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# Felo: copy what the AI team is doing right now to the Felo app every minute (Factory page).
+* * * * * root /usr/local/bin/felo-ran live-sync /usr/local/sbin/felo-live-sync >/dev/null 2>&1

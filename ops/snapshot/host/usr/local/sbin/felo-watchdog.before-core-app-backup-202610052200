@@ -231,7 +231,6 @@ AUTOMATIONS = [
     ("workroom-sync", "Projects & jobs sync", "Copies Felo's projects and coding jobs to the Projects & jobs page.", "Proxmox host", "Every minute", 1, ("ran", "host")),
     ("ops-snapshot", "Setup snapshot to git", "Saves all setup files (scripts, settings, Felo's identity and skills) to git and GitHub.", "Proxmox host", "Daily 3:20 am", 1440, ("ran", "host")),
     ("vzdump", "Full box copies", "Full copies of box 100 and box 101 on the server (the last 2 are kept).", "Proxmox host", "Daily 4:00 am", 1440, ("vzdump",)),
-    ("core-app-backup", "Felo core app data backup", "Copies the live data of apps on Felo core (tyx database + documents) to Proxmox; the off-site backup takes it from there.", "Proxmox host", "Daily 4:10 am", 1440, ("ran", "host")),
     ("offsite-backup", "Off-site backup", "Encrypted backup of the database and all settings to the off-site server; full box copies on Sundays.", "Proxmox host", "Daily 4:30 am", 1440, ("ran", "host")),
     ("db-backup", "Database backup (box 100)", "Daily copy of the Felo database kept on box 100.", "Box 100", "Daily 10:30 pm", 1440, ("timer", 100, "felo-backup")),
     ("deploy-watch", "Deploy page helper", "Puts finished updates on your Deploy page and runs the deploy when you tap it.", "Box 100", "Every minute", 1, ("ran", 100)),

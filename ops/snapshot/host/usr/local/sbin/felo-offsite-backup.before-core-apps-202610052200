@@ -33,8 +33,6 @@ step box101-settings restic backup -q --tag felo,box101 --stdin-filename box101-
     etc/systemd/system/felo-gemma-preview-worker.service etc/systemd/system/felo-project-gateway.service \
     root/felo-codex-preview/gemma-worker root/felo-codex-preview/backend-supervisor/code root/felo-codex-preview/scripts'
 # 4. Proxmox host: container definitions and Felo helpers
-# Felo core app data (tyxcrm database dumps + documents), made at 04:10 by felo-core-app-backup (2026-10-05).
-[ -d /var/lib/felo-core-backups ] && step core-apps restic backup -q --tag felo,core-apps /var/lib/felo-core-backups
 step host-settings restic backup -q --tag felo,host /etc/pve /usr/local/bin/felo-set-secret /usr/local/bin/felo-alerts-qr \
   /usr/local/sbin/felo-offsite-backup /etc/fail2ban/jail.d /etc/cron.d
 # Each part has its own tag, so the keep policy below keeps every part (one shared tag once made it keep only one part per day).

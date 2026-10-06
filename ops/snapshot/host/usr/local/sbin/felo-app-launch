@@ -1,0 +1,175 @@
+#!/usr/bin/env python3
+"""Proxmox host: launch (or roll back) an APP (backend + database) on Felo core, e.g. tyxcrm (2026-10-05).
+Run by felo-launch-watch after Daniel taps Launch / Roll back (for projects that have /root/felo-core/apps/<project>/
+app.json on box 100), or by Claude. Websites without a backend use felo-site-launch instead.
+
+  felo-app-launch <project> <hostname>
+  felo-app-launch --rollback <project> <hostname>
+
+Build on Proxmox, run on Felo core, keep the release on Proxmox:
+  1. box 101: copy the project source (no .git, node_modules, builds, uploads, tests, .env files) -> tar
+  2. box 100: release YYYY.MM.DD-n built with the recipe in /root/felo-core/apps/<project>/ (Dockerfile + felo-entry.sh,
+     owned by Felo core, not by the project); source kept in apps/<project>/releases/ (newest 5); image -> release store
+  3. core: database changes first, as a one-time cluster job (owner role). If they fail, the running app is untouched.
+  4. core: the app service (settings from app.json, passwords only as cluster secrets) updated start-first with
+     automatic rollback; then checked inside the cluster and at https://<hostname>/<health>.
+Prints one JSON line: {ok, release, prev_release, route_ok, note}. Database changes are never rolled back."""
+import base64, datetime, json, os, re, subprocess, sys, tempfile, time, urllib.request, zoneinfo
+os.environ["PATH"] = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+NAME = re.compile(r"^[a-z0-9][a-z0-9-]{0,40}$")
+HOST = re.compile(r"^(?=.{4,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$")
+STORE_PUSH, STORE_PULL = "127.0.0.1:5000", "felo-orchestrator.tail0ff06a.ts.net:5443"
+CHECKER = STORE_PULL + "/node:20.20.2-alpine"
+APPS = "/root/felo-core/apps"
+
+COLLECT = r'''
+import io, json, pathlib, sys, tarfile
+SRC = pathlib.Path("/root/.hermes/sandboxes/docker/default/workspace/projects")
+proj = (SRC / sys.argv[1]).resolve(); excl = json.loads(sys.argv[2])
+if proj.parent != SRC.resolve() or not (proj / "package.json").is_file(): sys.exit("project has no package.json")
+buf = io.BytesIO(); n = 0
+with tarfile.open(fileobj=buf, mode="w:gz") as t:
+    for p in sorted(proj.rglob("*")):
+        rel = p.relative_to(proj); r = rel.as_posix()
+        if p.is_symlink() or not p.is_file(): continue
+        if any(r == e or r.startswith(e + "/") for e in excl): continue
+        if any(x.startswith(".env") for x in rel.parts) or any(x == "node_modules" for x in rel.parts): continue
+        n += 1; t.add(p, arcname="src/" + r, recursive=False)
+sys.stderr.write("files=%d\n" % n); sys.stdout.buffer.write(buf.getvalue())
+'''
+
+
+def run(cmd, timeout=900, inp=None):
+    r = subprocess.run(cmd, capture_output=True, timeout=timeout, input=inp)
+    return r.returncode, r.stdout, r.stderr.decode(errors="replace").strip()
+
+
+def box100(script, timeout=1800):
+    return run(["pct", "exec", "100", "--", "bash", "-c", script], timeout)
+
+
+def core(script, timeout=900):
+    return run(["ssh", "-o", "BatchMode=yes", "core", script], timeout)
+
+
+def out(**kw):
+    print(json.dumps(kw)); sys.exit(0 if kw.get("ok") else 1)
+
+
+def q(s):
+    return "'" + str(s).replace("'", "'\\''") + "'"
+
+
+def cfg(project):
+    c, o, _ = box100("cat %s/%s/app.json" % (APPS, project))
+    if c != 0: out(ok=False, note="no app settings for %s on Proxmox (apps/%s/app.json)" % (project, project))
+    a = json.loads(o)
+    assert NAME.match(a["service"]) and all(NAME.match(n) for n in a["networks"]) and all(NAME.match(s.replace("_", "-")) for s in a["secrets_app"] + a["secrets_migrate"])
+    return a
+
+
+def label(service):
+    c, o, _ = core("docker service inspect %s --format '{{index .Spec.Labels \"felo.release\"}}' 2>/dev/null" % service)
+    return o.decode().strip() if c == 0 else ""
+
+
+def route_ok(hostname, health):
+    try:
+        with urllib.request.urlopen("https://%s%s" % (hostname, health), timeout=15) as r: return r.status == 200
+    except Exception: return False
+
+
+def inside_ok(a):
+    url = "http://%s:%d" % (a["service"], a["port"])
+    c, o, _ = core("docker run --rm --network felo-edge %s sh -c 'wget -q -O- %s%s && echo && wget -q -O- %s/ | head -c 400'" % (CHECKER, url, a["health"], url), 300)
+    return c == 0 and b"<" in o
+
+
+def next_release(project):
+    today = datetime.datetime.now(zoneinfo.ZoneInfo("America/Chicago")).strftime("%Y.%m.%d")
+    _, o, _ = box100("curl -s -u felo-core:$(cat /root/felo-core/registry/auth/password) http://127.0.0.1:5000/v2/%s/tags/list" % project)
+    try: tags = json.loads(o or b"{}").get("tags") or []
+    except Exception: tags = []
+    n = max([int(t.split("-")[-1]) for t in tags if t.startswith(today + "-") and t.split("-")[-1].isdigit()] or [0]) + 1
+    return "%s-%d" % (today, n)
+
+
+def migrate(a, project, image):
+    job = project + "-migrate"
+    core("docker service rm %s >/dev/null 2>&1" % job)
+    secrets = " ".join("--secret " + s for s in a["secrets_migrate"])
+    nets = " ".join("--network " + n for n in a["networks"] if n != "felo-edge")
+    envs = " ".join("-e " + q("%s=%s" % kv) for kv in a["env"].items())
+    c, _, e = core("docker service create --detach --quiet --name %s --mode replicated-job --restart-condition none "
+                   "--with-registry-auth --constraint node.hostname!=core %s %s %s %s %s >/dev/null"
+                   % (job, nets, secrets, envs, image, " ".join(q(x) for x in a["migrate"])))
+    if c != 0: return False, "could not start the database changes: " + e[-200:]
+    state = ""
+    for _ in range(120):
+        state = core("docker service ps %s --format '{{.CurrentState}}' | head -1" % job)[1].decode().strip()
+        if state.startswith(("Complete", "Failed", "Rejected")): break
+        time.sleep(5)
+    logs = core("docker service logs --raw %s 2>&1 | tail -15" % job)[1].decode(errors="replace")
+    core("docker service rm %s >/dev/null 2>&1" % job)
+    if not state.startswith("Complete"): return False, "database changes did not finish (%s): %s" % (state[:30], logs[-300:])
+    return True, logs[-300:]
+
+
+def launch(project, hostname):
+    a = cfg(project)
+    c, tgz, err = run(["pct", "exec", "101", "--", "python3", "-c", COLLECT, project, json.dumps(a.get("exclude", []))], 300)
+    if c != 0 or not tgz: out(ok=False, note="could not copy the project: " + (err or "unknown")[-160:])
+    release = next_release(project); d = "%s/%s/releases" % (APPS, project)
+    with tempfile.NamedTemporaryFile(suffix=".tar.gz", delete=False) as f: f.write(tgz); local = f.name
+    run(["pct", "exec", "100", "--", "mkdir", "-p", d])
+    c, _, e = run(["pct", "push", "100", local, "%s/%s.tar.gz" % (d, release)]); os.unlink(local)
+    if c != 0: out(ok=False, note="could not keep the release on Proxmox: " + e[-160:])
+    c, _, e = box100("""set -e
+B=$(mktemp -d); trap 'rm -rf $B' EXIT; cd $B
+tar -xzf %(d)s/%(r)s.tar.gz
+cp %(apps)s/%(p)s/Dockerfile %(apps)s/%(p)s/felo-entry.sh src/
+docker build -q -t %(push)s/%(p)s:%(r)s src >/dev/null
+docker push -q %(push)s/%(p)s:%(r)s >/dev/null
+ls -1t %(d)s/*.tar.gz | tail -n +6 | xargs -r rm -f
+""" % {"d": d, "r": release, "p": project, "apps": APPS, "push": STORE_PUSH}, 2400)
+    if c != 0: out(ok=False, release=release, note="could not build the release: " + e[-300:])
+    image = "%s/%s:%s" % (STORE_PULL, project, release)
+    ok, note = migrate(a, project, image)
+    if not ok: out(ok=False, release=release, note=note + " The running version was not changed.")
+    svc = a["service"]; prev = label(svc)
+    if prev:
+        c, _, e = core("docker service update --detach=false --quiet --with-registry-auth --image %s --label-add felo.release=%s %s >/dev/null" % (image, release, svc), 900)
+        state = core("docker service inspect %s --format '{{.UpdateStatus.State}}'" % svc)[1].decode().strip()
+        if c != 0 or state.startswith("rollback"):
+            out(ok=False, release=release, prev_release=prev, note="the new version did not start healthy; the app stayed on %s (database changes from this release stay applied)" % prev)
+    else:
+        args = ["docker service create --detach=false --quiet --name", svc, "--replicas 1 --with-registry-auth",
+                "--constraint node.hostname==" + a["node"] if a.get("node") else "--constraint node.hostname!=core"]
+        args += ["--network " + n for n in a["networks"]] + ["--mount " + m for m in a.get("mounts", [])]
+        args += ["--secret " + s for s in a["secrets_app"]] + ["-e " + q("%s=%s" % kv) for kv in a["env"].items()]
+        args += ["--health-cmd", q("wget -q -O /dev/null http://127.0.0.1:%d%s" % (a["port"], a["health"])), "--health-interval 10s --health-retries 3 --health-start-period 20s",
+                 "--update-order start-first --update-failure-action rollback --update-monitor 30s --rollback-order start-first",
+                 "--label felo.app=" + project, "--label felo.release=" + release, image, ">/dev/null"]
+        c, _, e = core(" ".join(args), 900)
+        if c != 0: out(ok=False, release=release, note="could not start the app on Felo core: " + e[-300:])
+    time.sleep(5)
+    if not inside_ok(a): out(ok=False, release=release, prev_release=prev or None, note="the app does not answer inside Felo core")
+    out(ok=True, release=release, prev_release=prev or None, route_ok=route_ok(hostname, a["health"]), note=None)
+
+
+def rollback(project, hostname):
+    a = cfg(project); svc = a["service"]; before = label(svc)
+    if not before: out(ok=False, note="this app is not running on Felo core")
+    c, _, e = core("docker service rollback --detach=false --quiet %s >/dev/null" % svc, 900)
+    after = label(svc)
+    if c != 0 or not after or after == before: out(ok=False, release=before, note="roll back did not complete: " + e[-160:])
+    out(ok=True, release=after, prev_release=None, route_ok=route_ok(hostname, a["health"]),
+        note="rolled back from %s (database changes stay)" % before)
+
+
+if __name__ == "__main__":
+    args = sys.argv[1:]
+    mode = "rollback" if args and args[0] == "--rollback" else "launch"
+    if mode == "rollback": args = args[1:]
+    if len(args) != 2 or not NAME.match(args[0]) or not HOST.match(args[1]): sys.exit("usage: felo-app-launch [--rollback] <project> <hostname>")
+    (rollback if mode == "rollback" else launch)(args[0], args[1])

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Proxmox host: carries out Daniel's taps on the Felo Launches page (cron, every minute; finish-line #6, 2026-10-03).
 
-  approved            -> building -> felo-site-launch (websites) or felo-app-launch (apps with apps/<project>/app.json) -> live (older live rows -> replaced) | failed
+  approved            -> building -> felo-site-launch <project> <hostname> -> live (older live rows -> replaced) | failed
   rollback_requested  -> felo-site-launch --rollback                      -> live on the previous release
   live, address not answering yet -> checked each run; turns route_ok once https://<hostname>/ answers (Daniel adds the
                                      Cloudflare route on first launch)
@@ -38,15 +38,8 @@ def notify(title, body):
     except Exception: pass
 
 
-def is_app(project):
-    """Apps (backend + database, e.g. tyxcrm) have run settings on Proxmox: /root/felo-core/apps/<project>/app.json."""
-    return subprocess.run(["pct", "exec", "100", "--", "test", "-f", "/root/felo-core/apps/%s/app.json" % project], timeout=30).returncode == 0
-
-
 def launcher(*args):
-    project = args[-2]
-    script = "/usr/local/sbin/felo-app-launch" if is_app(project) else "/usr/local/sbin/felo-site-launch"
-    r = subprocess.run([script, *args], capture_output=True, text=True, timeout=3000)
+    r = subprocess.run(["/usr/local/sbin/felo-site-launch", *args], capture_output=True, text=True, timeout=1500)
     try: return json.loads(r.stdout.strip().splitlines()[-1])
     except Exception: return {"ok": False, "note": (r.stderr or r.stdout or "launcher stopped")[-160:]}
 
@@ -89,12 +82,11 @@ def main():
     for line in sql("SELECT id||'|'||hostname FROM felo_launches WHERE status='live' AND route_ok IS NOT TRUE AND updated_at > now() - interval '30 days' LIMIT 10;").splitlines():
         i, host = line.split("|")
         if not HOST.match(host): continue
-        for path in ("/__felo_health", "/health"):  # websites / apps
-            try:
-                with urllib.request.urlopen("https://%s%s" % (host, path), timeout=10) as r:
-                    if r.status == 200:
-                        sql("UPDATE felo_launches SET route_ok=true WHERE id=%d;" % int(i)); notify("Felo: %s answers" % host, "https://%s/ is live." % host); break
-            except Exception: pass
+        try:
+            with urllib.request.urlopen("https://%s/__felo_health" % host, timeout=10) as r:
+                if r.status == 200 and r.read(10).startswith(b"ok"):
+                    sql("UPDATE felo_launches SET route_ok=true WHERE id=%d;" % int(i)); notify("Felo: %s answers" % host, "https://%s/ is live." % host)
+        except Exception: pass
 
 
 if __name__ == "__main__":
