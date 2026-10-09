@@ -58,3 +58,6 @@ Daniel moved **tyxcrm.app** DNS to Cloudflare (nameservers rudy/zita.ns.cloudfla
 mx1/mx2.hostinger.com, SPF, DMARC, autoconfig/autodiscover + 3 hostingermail DKIM CNAMEs (all DNS only). Deleted: apex A
 168.231.66.195 (old tyx). Route felo-core → Published application routes: tyxcrm.app → http://tyxcrm-app:3000.
 Verified: https://tyxcrm.app/health ok and / = tyxcrm screens, through Cloudflare. Felo's launches should use hostname tyxcrm.app.
+
+## 2026-10-08 sign-up closed
+Daniel created tenant #1 (1 tenant in DB). SIGNUP_ENABLED=false in apps/tyxcrm/app.json (kept by every launch) and on the running service; sign-up now 403 "Signups are currently closed". Reopen: set true in app.json + service.
