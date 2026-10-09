@@ -52,3 +52,9 @@ with pg_restore --list) + uploads tar → `/var/lib/felo-core-backups/tyxcrm/`, 
   ran several copies at once → "tuple concurrently updated"; the launcher read one failed attempt. Fixed: migrations run as
   a plain 1-replica service with restart none (exactly one run); tested 3×. DB untouched (8 migrations, all from 2026-10-05).
 - Backups: felo-*.before-cfcheck-202610082300, felo-app-launch.before-migrate-fix-202610082320.
+
+## 2026-10-08 tyxcrm.app live
+Daniel moved **tyxcrm.app** DNS to Cloudflare (nameservers rudy/zita.ns.cloudflare.com; registrar stays Hostinger). Kept: MX
+mx1/mx2.hostinger.com, SPF, DMARC, autoconfig/autodiscover + 3 hostingermail DKIM CNAMEs (all DNS only). Deleted: apex A
+168.231.66.195 (old tyx). Route felo-core → Published application routes: tyxcrm.app → http://tyxcrm-app:3000.
+Verified: https://tyxcrm.app/health ok and / = tyxcrm screens, through Cloudflare. Felo's launches should use hostname tyxcrm.app.
