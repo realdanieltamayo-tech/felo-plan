@@ -40,3 +40,15 @@ with pg_restore --list) + uploads tar → `/var/lib/felo-core-backups/tyxcrm/`, 
   should add a switch to close sign-up before tyx is public.
 - Follow-up job (POST /api/v1/jobs/run-followups with JOBS_TOKEN) has no scheduler yet (and sends are console-only).
 - Demo seed NOT run in production.
+
+## 2026-10-08 "I cant find tyx anywhere"
+- Our tyx has **no working address**: staging.tyxcrm.com (DNS lyttix.com → 209.126.82.19) is the OLD tyx ("Invalid Tenant");
+  tyxcrm.app (Hostinger parking DNS → 168.231.66.195) also old. Neither is on Cloudflare.
+- Bug 1 (mine): the address check accepted ANY 200 → Launches row #3 shows "answering" because the OLD server answered.
+  Fixed: felo-app-launch, felo-site-launch, felo-launch-watch count an address only if the answer comes through Cloudflare
+  (cf-ray + server cloudflare) and send User-Agent felo-launch-check/1.0 (Cloudflare 403s Python's default UA).
+  Row #3 still says route_ok=true (writing Felo's DB was blocked); the next launch corrects it.
+- Bug 2 (mine): Felo's launch #4 (2026.10.08-1, same code as -2) "failed" at the database step: swarm replicated-job mode
+  ran several copies at once → "tuple concurrently updated"; the launcher read one failed attempt. Fixed: migrations run as
+  a plain 1-replica service with restart none (exactly one run); tested 3×. DB untouched (8 migrations, all from 2026-10-05).
+- Backups: felo-*.before-cfcheck-202610082300, felo-app-launch.before-migrate-fix-202610082320.
