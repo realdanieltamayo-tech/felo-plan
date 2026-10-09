@@ -75,9 +75,7 @@ def label(service):
 
 def route_ok(hostname, health):
     try:
-        with urllib.request.urlopen(urllib.request.Request("https://%s%s" % (hostname, health), headers={"User-Agent": "felo-launch-check/1.0"}), timeout=15) as r:
-            # must come through Cloudflare (the felo-core tunnel); an old server on that name does not count
-            return r.status == 200 and bool(r.headers.get("cf-ray")) and "cloudflare" in (r.headers.get("server") or "").lower()
+        with urllib.request.urlopen("https://%s%s" % (hostname, health), timeout=15) as r: return r.status == 200
     except Exception: return False
 
 
@@ -102,17 +100,14 @@ def migrate(a, project, image):
     secrets = " ".join("--secret " + s for s in a["secrets_migrate"])
     nets = " ".join("--network " + n for n in a["networks"] if n != "felo-edge")
     envs = " ".join("-e " + q("%s=%s" % kv) for kv in a["env"].items())
-    # One single run, never retried: a plain 1-copy service with restart none. ("replicated-job" mode started several
-    # copies at once and they clashed on permission changes: "tuple concurrently updated", 2026-10-08.)
-    c, _, e = core("docker service create --detach --quiet --name %s --replicas 1 --restart-condition none "
+    c, _, e = core("docker service create --detach --quiet --name %s --mode replicated-job --restart-condition none "
                    "--with-registry-auth --constraint node.hostname!=core %s %s %s %s %s >/dev/null"
                    % (job, nets, secrets, envs, image, " ".join(q(x) for x in a["migrate"])))
     if c != 0: return False, "could not start the database changes: " + e[-200:]
     state = ""
     for _ in range(120):
-        states = core("docker service ps %s --format '{{.CurrentState}}'" % job)[1].decode().split("\n")
-        state = next((x for x in states if x.startswith(("Complete", "Failed", "Rejected", "Shutdown"))), states[0] if states else "")
-        if state.startswith(("Complete", "Failed", "Rejected", "Shutdown")): break
+        state = core("docker service ps %s --format '{{.CurrentState}}' | head -1" % job)[1].decode().strip()
+        if state.startswith(("Complete", "Failed", "Rejected")): break
         time.sleep(5)
     logs = core("docker service logs --raw %s 2>&1 | tail -15" % job)[1].decode(errors="replace")
     core("docker service rm %s >/dev/null 2>&1" % job)

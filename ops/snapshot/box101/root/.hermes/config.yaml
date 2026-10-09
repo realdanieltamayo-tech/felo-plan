@@ -364,3 +364,15 @@ known_builtin_toolsets:
     - web
     - x_search
     - yuanbao
+
+# Work PC Gemma (free, local) for routine scheduled jobs (Daniel 2026-10-08: "whatever Gemma can handle").
+# felo-gemma-worker = gemma4:e4b with a 65k window (plain gemma4:e4b requests only get 4k from Ollama).
+providers:
+  workpc-gemma:
+    api: http://100.109.89.77:11434/v1
+    api_key: ollama
+    transport: openai_chat
+    discover_models: false
+    models:
+      felo-gemma-worker:latest:
+        context_length: 65536

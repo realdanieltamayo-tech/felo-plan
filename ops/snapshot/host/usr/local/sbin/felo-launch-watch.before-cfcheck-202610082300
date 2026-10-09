@@ -91,8 +91,8 @@ def main():
         if not HOST.match(host): continue
         for path in ("/__felo_health", "/health"):  # websites / apps
             try:
-                with urllib.request.urlopen(urllib.request.Request("https://%s%s" % (host, path), headers={"User-Agent": "felo-launch-check/1.0"}), timeout=10) as r:
-                    if r.status == 200 and r.headers.get("cf-ray") and "cloudflare" in (r.headers.get("server") or "").lower():  # through Cloudflare only
+                with urllib.request.urlopen("https://%s%s" % (host, path), timeout=10) as r:
+                    if r.status == 200:
                         sql("UPDATE felo_launches SET route_ok=true WHERE id=%d;" % int(i)); notify("Felo: %s answers" % host, "https://%s/ is live." % host); break
             except Exception: pass
 
