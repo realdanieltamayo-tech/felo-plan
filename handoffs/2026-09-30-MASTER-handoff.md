@@ -170,3 +170,5 @@ then work on it only, and write its handoff when done.
   (c) Dev team may install npm packages: felo-team.py ALLOWED + npm install/ci/view/ls; NPM_ENV = official registry only, ignore-scripts on (enforced by Claude Code allowlist + npm config, not a firewall). Backup felo-team.py.before-npm-202610050200. Verified: tyxcrm installs; its 24 tests fail because embedded-postgres refuses root (needs createPostgresUser: true) — Felo's dev team to fix.
 
 - **2026-10-05 tyxcrm on Felo core:** app + Postgres on felo-node-1, app launcher, nightly data backup + off-site. handoffs/2026-10-05-tyxcrm-on-felo-core.md
+
+- **2026-10-09 routine jobs on Gemma:** all 6 scheduled jobs are scripts + local Gemma (zero Claude); Claude only for chats, advisor, coding. handoffs/2026-10-09-gemma-for-routine-jobs.md
