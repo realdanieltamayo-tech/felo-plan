@@ -1,0 +1,41 @@
+#!/bin/sh
+# Proxmox host: give Felo Studio (built on box 100) the Higgsfield API key. Run: felo-studio-set-higgsfield
+# Asks for the key ID and secret without showing them, checks them with a free price estimate (no generation,
+# no charge), and saves them to box 100 /root/felo-studio-runtime/higgsfield.env (600). Values are never printed.
+set -eu
+undouble() {  # if a paste arrived twice in a row, keep one copy
+  v=$1; n=${#v}; h=$((n/2))
+  a=$(printf "%s" "$v" | cut -c1-$h); b=$(printf "%s" "$v" | cut -c$((h+1))-)
+  if [ $((n%2)) -eq 0 ] && [ -n "$a" ] && [ "$a" = "$b" ]; then printf "%s" "$a"; else printf "%s" "$v"; fi; }
+keep() { printf "%s" "$1" | tr -cd "A-Za-z0-9_-"; }
+printf "Higgsfield API key (paste it once): "; stty -echo; read -r RAW; stty echo; echo
+RAW=$(undouble "$(printf "%s" "$RAW" | tr -cd "A-Za-z0-9_:-")")
+case "$RAW" in
+  *:*) ID=$(keep "${RAW%%:*}"); SECRET=$(keep "$(printf "%s" "${RAW#*:}" | cut -d: -f1)");;
+  *)   ID=$(keep "$RAW")
+       printf "Key secret, if you have a separate one (otherwise just press Enter): "; stty -echo; read -r S2; stty echo; echo
+       SECRET=$(keep "$(undouble "$S2")");;
+esac
+[ "$SECRET" = "$ID" ] && SECRET=""   # same paste landed in both prompts
+[ ${#ID} -ge 8 ] || { echo "That key looks too short. Nothing changed."; exit 1; }
+if [ -n "$SECRET" ]; then CANDIDATES="Key $ID:$SECRET"; SHOW="key ending ...$(printf "%s" "$ID" | tail -c 4) + secret ending ...$(printf "%s" "$SECRET" | tail -c 4)"
+else CANDIDATES="Key $ID|Bearer $ID"; SHOW="single key ending ...$(printf "%s" "$ID" | tail -c 4) (${#ID} chars)"; fi
+echo "Got $SHOW. Checking with Higgsfield (free price estimate)..."
+TMP=$(mktemp); trap 'rm -f "$TMP"' EXIT
+AUTH=""; LAST=""
+OLDIFS=$IFS; IFS="|"
+for H in $CANDIDATES; do
+  CODE=$(curl -s -o "$TMP" -w "%{http_code}" -X POST "https://api.higgsfield.ai/estimate/higgsfield-ai/soul/v2/standard" \
+    -H "Authorization: $H" -H "Content-Type: application/json" -d '{"prompt":"price check"}')
+  LAST=$CODE
+  if [ "$CODE" != 401 ] && [ "$CODE" != 403 ]; then AUTH=$H; break; fi
+done
+IFS=$OLDIFS
+[ -n "$AUTH" ] || { echo "Higgsfield did not accept that key (HTTP $LAST). Make sure it is an API key from console.higgsfield.ai. Nothing changed."; exit 1; }
+[ "$LAST" = 200 ] && echo "Higgsfield accepted the key. Sample estimate (Soul image): $(cat "$TMP")" \
+  || echo "Higgsfield answered HTTP $LAST (not a key error). Saving it; Claude will check."
+umask 077
+printf "HIGGSFIELD_AUTH='%s'\n" "$AUTH" > "$TMP"   # quoted: safe to source, never executed
+pct exec 100 -- mkdir -p -m 700 /root/felo-studio-runtime
+pct push 100 "$TMP" /root/felo-studio-runtime/higgsfield.env --perms 600
+echo "Saved on box 100 for Felo Studio."
