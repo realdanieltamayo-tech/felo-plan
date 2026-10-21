@@ -24,6 +24,7 @@ mkdir -p /data/services/felo-studio /data/felo-studio && chown 1000:1000 /data/f
 cp /tmp/felo-studio-rel/ops/docker-compose.yml /data/services/felo-studio/
 cd /data/services/felo-studio && touch .env && chmod 600 .env
 grep -q '^STUDIO_TAG=' .env && sed -i 's/^STUDIO_TAG=.*/STUDIO_TAG=$TAG/' .env || echo 'STUDIO_TAG=$TAG' >> .env
+grep -q '^STUDIO_ADMIN_TOKEN=' .env || echo \"STUDIO_ADMIN_TOKEN=\$(python3 -c 'import secrets;print(secrets.token_urlsafe(32))')\" >> .env
 STUDIO_TAG=$TAG docker compose pull -q && STUDIO_TAG=$TAG docker compose up -d
 cd /data/sites/felostudio && cp -a styles.css template.html build.py nginx.conf /tmp/felo-studio-rel/ && R=\$(python3 /tmp/felo-studio-rel/ops/core_apply_site.py /tmp/felo-studio-rel/site /data/sites/felostudio)
 python3 build.py | tail -1 && chown -R daniel:daniel /data/sites/felostudio
