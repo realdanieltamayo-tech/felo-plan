@@ -1,7 +1,7 @@
 #!/bin/sh
 # Felo Studio release. Run on the PROXMOX HOST:  felo-studio-release
 # 1) box 100: refuse uncommitted work, build, run the test suite in the image (no network)
-# 2) tag YYYY.MM.DD-n in git and push the image to the release store (127.0.0.1:5000 on box 100)
+# 2) tag YYYY.MM.DD-n in git and push the image to the release store (core.tail0ff06a.ts.net:5443, the registry on core)
 # 3) core: put the Studio pages into felostudio.com, rebuild the site, pull + start that exact version
 set -eu
 REPO=/root/felo-studio
@@ -14,8 +14,8 @@ pct exec 100 -- sh -c "cd $REPO && docker build -q -t felo-studio:$TAG . >/dev/n
 echo "== tests"
 pct exec 100 -- sh -c "docker run --rm --network none -v $REPO:/w:ro -w /w -e PYTHONDONTWRITEBYTECODE=1 felo-studio:$TAG python -m tests.test_studio 2>&1 | tail -1" | tee /tmp/felo-studio-test.txt
 grep -q "checks passed" /tmp/felo-studio-test.txt || { echo "Tests failed. Nothing released."; exit 1; }
-pct exec 100 -- sh -c "cd $REPO && git tag $TAG && docker tag felo-studio:$TAG 127.0.0.1:5000/felo-studio:$TAG && docker push -q 127.0.0.1:5000/felo-studio:$TAG >/dev/null"
-echo "== pushed 127.0.0.1:5000/felo-studio:$TAG"
+pct exec 100 -- sh -c "cd $REPO && git tag $TAG && docker tag felo-studio:$TAG core.tail0ff06a.ts.net:5443/felo-studio:$TAG && docker push -q core.tail0ff06a.ts.net:5443/felo-studio:$TAG >/dev/null"
+echo "== pushed core.tail0ff06a.ts.net:5443/felo-studio:$TAG"
 pct exec 100 -- sh -c "cd $REPO && tar -czf /tmp/felo-studio-site.tgz site ops" && pct pull 100 /tmp/felo-studio-site.tgz /tmp/felo-studio-site.tgz
 scp -q /tmp/felo-studio-site.tgz core:/tmp/felo-studio-site.tgz && rm -f /tmp/felo-studio-site.tgz
 ssh core "set -e

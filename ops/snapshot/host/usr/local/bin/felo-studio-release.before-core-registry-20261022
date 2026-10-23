@@ -1,0 +1,33 @@
+#!/bin/sh
+# Felo Studio release. Run on the PROXMOX HOST:  felo-studio-release
+# 1) box 100: refuse uncommitted work, build, run the test suite in the image (no network)
+# 2) tag YYYY.MM.DD-n in git and push the image to the release store (127.0.0.1:5000 on box 100)
+# 3) core: put the Studio pages into felostudio.com, rebuild the site, pull + start that exact version
+set -eu
+REPO=/root/felo-studio
+pct exec 100 -- sh -c "cd $REPO && git diff --quiet && git diff --cached --quiet" || { echo "Uncommitted changes on box 100. Commit first."; exit 1; }
+DAY=$(date -u +%Y.%m.%d); N=1
+while pct exec 100 -- sh -c "cd $REPO && git rev-parse -q --verify refs/tags/$DAY-$N >/dev/null"; do N=$((N+1)); done
+TAG=$DAY-$N
+echo "== building felo-studio $TAG on box 100"
+pct exec 100 -- sh -c "cd $REPO && docker build -q -t felo-studio:$TAG . >/dev/null"
+echo "== tests"
+pct exec 100 -- sh -c "docker run --rm --network none -v $REPO:/w:ro -w /w -e PYTHONDONTWRITEBYTECODE=1 felo-studio:$TAG python -m tests.test_studio 2>&1 | tail -1" | tee /tmp/felo-studio-test.txt
+grep -q "checks passed" /tmp/felo-studio-test.txt || { echo "Tests failed. Nothing released."; exit 1; }
+pct exec 100 -- sh -c "cd $REPO && git tag $TAG && docker tag felo-studio:$TAG 127.0.0.1:5000/felo-studio:$TAG && docker push -q 127.0.0.1:5000/felo-studio:$TAG >/dev/null"
+echo "== pushed 127.0.0.1:5000/felo-studio:$TAG"
+pct exec 100 -- sh -c "cd $REPO && tar -czf /tmp/felo-studio-site.tgz site ops" && pct pull 100 /tmp/felo-studio-site.tgz /tmp/felo-studio-site.tgz
+scp -q /tmp/felo-studio-site.tgz core:/tmp/felo-studio-site.tgz && rm -f /tmp/felo-studio-site.tgz
+ssh core "set -e
+rm -rf /tmp/felo-studio-rel && mkdir -p /tmp/felo-studio-rel && tar -xzf /tmp/felo-studio-site.tgz -C /tmp/felo-studio-rel && rm /tmp/felo-studio-site.tgz
+mkdir -p /data/services/felo-studio /data/felo-studio && chown 1000:1000 /data/felo-studio
+cp /tmp/felo-studio-rel/ops/docker-compose.yml /data/services/felo-studio/
+cd /data/services/felo-studio && touch .env && chmod 600 .env
+grep -q '^STUDIO_TAG=' .env && sed -i 's/^STUDIO_TAG=.*/STUDIO_TAG=$TAG/' .env || echo 'STUDIO_TAG=$TAG' >> .env
+grep -q '^STUDIO_ADMIN_TOKEN=' .env || echo \"STUDIO_ADMIN_TOKEN=\$(python3 -c 'import secrets;print(secrets.token_urlsafe(32))')\" >> .env
+STUDIO_TAG=$TAG docker compose pull -q && STUDIO_TAG=$TAG docker compose up -d
+cd /data/sites/felostudio && cp -a styles.css template.html build.py nginx.conf /tmp/felo-studio-rel/ && R=\$(python3 /tmp/felo-studio-rel/ops/core_apply_site.py /tmp/felo-studio-rel/site /data/sites/felostudio)
+python3 build.py | tail -1 && chown -R daniel:daniel /data/sites/felostudio
+[ \"\$R\" = 'nginx changed' ] && docker restart felostudio-web >/dev/null && echo 'web server restarted (new /api/studio/ route)'
+sleep 3; curl -s localhost:8096/api/studio/health; echo"
+echo "== released felo-studio $TAG"

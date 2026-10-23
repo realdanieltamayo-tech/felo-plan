@@ -18,7 +18,7 @@ import base64, datetime, json, os, re, subprocess, sys, tempfile, time, urllib.r
 os.environ["PATH"] = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 NAME = re.compile(r"^[a-z0-9][a-z0-9-]{0,40}$")
 HOST = re.compile(r"^(?=.{4,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$")
-STORE_PUSH, STORE_PULL = "127.0.0.1:5000", "felo-orchestrator.tail0ff06a.ts.net:5443"
+STORE_PUSH = STORE_PULL = "core.tail0ff06a.ts.net:5443"  # Felo core registry on core (moved from box 100 2026-10-22)
 BASE = STORE_PUSH + "/nginx:1.30.5-alpine"
 SITES = "/root/felo-core/sites"
 
@@ -96,7 +96,7 @@ def inside_ok(service, image):
 
 def next_release(project):
     today = datetime.datetime.now(zoneinfo.ZoneInfo("America/Chicago")).strftime("%Y.%m.%d")
-    c, o, _ = box100("curl -s -u felo-core:$(cat /root/felo-core/registry/auth/password) http://127.0.0.1:5000/v2/site-%s/tags/list" % project)
+    c, o, _ = core("curl -s -u felo-core:$(cat /data/registry/auth/password) http://127.0.0.1:5000/v2/site-%s/tags/list" % project)
     try: tags = json.loads(o or b"{}").get("tags") or []
     except Exception: tags = []
     n = max([int(t.split("-")[-1]) for t in tags if t.startswith(today + "-") and t.split("-")[-1].isdigit()] or [0]) + 1
