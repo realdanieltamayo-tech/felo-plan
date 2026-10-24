@@ -30,4 +30,7 @@ cd /data/sites/felostudio && cp -a styles.css template.html build.py nginx.conf 
 python3 build.py | tail -1 && chown -R daniel:daniel /data/sites/felostudio
 [ \"\$R\" = 'nginx changed' ] && docker restart felostudio-web >/dev/null && echo 'web server restarted (new /api/studio/ route)'
 sleep 3; curl -s localhost:8096/api/studio/health; echo"
+# box 100 shares a small Proxmox storage pool: drop build leftovers and old local images after every release
+pct exec 100 -- sh -c "docker builder prune -af >/dev/null 2>&1; docker image prune -af --filter until=48h >/dev/null 2>&1" || true
+pct fstrim 100 >/dev/null 2>&1 || true
 echo "== released felo-studio $TAG"
