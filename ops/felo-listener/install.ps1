@@ -26,7 +26,7 @@ Write-Host "Using $py"
 & cmd /c "$py -m venv `"$Home2\venv`""
 & "$Home2\venv\Scripts\python.exe" -m pip install --upgrade pip --quiet
 & "$Home2\venv\Scripts\python.exe" -m pip install --quiet -r (Join-Path $Src "requirements.txt")
-Copy-Item (Join-Path $Src "felo_listener.py"), (Join-Path $Src "hey_felo.onnx") $Home2 -Force
+Copy-Item (Join-Path $Src "felo_listener.py"), (Join-Path $Src "hey_felo.onnx"), (Join-Path $Src "melspectrogram.onnx"), (Join-Path $Src "embedding_model.onnx") $Home2 -Force
 
 # start hidden at every Windows log-in
 $action = New-ScheduledTaskAction -Execute "$Home2\venv\Scripts\pythonw.exe" -Argument "`"$Home2\felo_listener.py`"" -WorkingDirectory $Home2

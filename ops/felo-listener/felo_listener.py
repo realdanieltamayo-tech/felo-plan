@@ -137,11 +137,11 @@ class Mic:
 # ---------------- wake word (local only) ----------------
 class Wake:
     def __init__(self):
-        import openwakeword
         from openwakeword.model import Model
-        try: openwakeword.utils.download_models(model_names=["embedding_model", "melspectrogram"])
-        except Exception: pass
-        self.m = Model(wakeword_models=[MODEL], inference_framework="onnx"); self.key = list(self.m.models)[0]
+        # the two helper models ship next to this file (the automatic download failed on the work PC, 2026-10-26)
+        self.m = Model(wakeword_models=[MODEL], inference_framework="onnx",
+                       melspec_model_path=os.path.join(HERE, "melspectrogram.onnx"),
+                       embedding_model_path=os.path.join(HERE, "embedding_model.onnx")); self.key = list(self.m.models)[0]
         say("wake-word model ready (%s)" % os.path.basename(MODEL))
 
     def score(self, block):
