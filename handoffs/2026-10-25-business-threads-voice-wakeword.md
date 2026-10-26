@@ -28,3 +28,6 @@ Whisper as wake detector tested on synthetic speech: 6/10 full phrase, 8/13 firs
   listening"), requirements.txt, install.ps1 (Python 3.12 via winget if missing, venv in %LOCALAPPDATA%\FeloListener,
   scheduled task at log-on, hidden). Auth = Tailscale identity + Origin header (verified the voice endpoints from the
   Proxmox host as Daniel). Delivery idea: Taildrop (`tailscale file cp … desktop-89vcnqk:`).
+
+## 2026-10-26 Hey Felo model + listener delivered
+Trained hey_felo.onnx (205 KB, felo-node-2, ~2 h). Training metrics: accuracy 0.65, recall 0.31, 0.71 false positives/h (harsh augmented test). Own test with unseen Microsoft voices: clean 41/60 caught (misses mostly full sentences in one breath), noisy 22/60; false wakes only "Hey fellow" (4/82 clean). Threshold 0.3. Package ops/felo-listener/ (also sent to desktop-89vcnqk by Taildrop). Fixes needed on the way: torch index, pyarrow 14, AudioSet now parquet, piper-sample-generator v2.0.0, DeepPhonemizer S3 403 (custom negatives only), --shm-size 2g. Next: record Daniel saying Hey Felo ~20x and retrain/verify for his voice. Container image felo-wakeword:env and /srv/wakeword/work (~20 GB) still on felo-node-2.

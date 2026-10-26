@@ -1,0 +1,5 @@
+numpy<2
+sounddevice==0.5.*
+openwakeword==0.6.*
+onnxruntime==1.*
+pygame==2.*
