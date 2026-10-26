@@ -26,7 +26,7 @@ RATE = 16000
 BLOCK = 1280                                   # 80 ms, what the wake-word model reads
 HERE = os.path.dirname(os.path.abspath(__file__))
 MODEL = os.path.join(HERE, "hey_felo.onnx")
-THRESHOLD = 0.3                                # tested 2026-10-26: unseen voices, clean speech ~2 in 3 caught
+THRESHOLD = 0.8                                # v3 (trained on Daniel's voice): his Hey Felo ~0.96, his normal speech <0.1
 STOP = re.compile(r"^\W*(?:stop|bye|goodbye|that'?s all|thanks|thank you|para|adi[oó]s|gracias|listo)\W*$", re.I)
 PAUSE = re.compile(r"\bstop listening\b|\bdeja de escuchar\b", re.I)
 RESUME = re.compile(r"\bstart listening\b|\bempieza a escuchar\b|\bescucha de nuevo\b", re.I)
@@ -178,8 +178,24 @@ def main():
     say("Felo Listener starting (Felo HQ: %s)" % FELO)
     mic = Mic(a.mic); wake = Wake(); paused = False
     say("say 'Hey Felo' to talk")
-    while True:
-        s = wake.score(mic.block())
+    peak = best = 0.0; last = time.time()
+    rec_flag = os.path.join(HOME, "record.on")              # recording mode for training on Daniel's voice:
+    while True:                                             # the file's first line names the folder (positive / negative)
+        if os.path.exists(rec_flag):
+            try: kind = (open(rec_flag).read().strip() or "positive")
+            except OSError: kind = "positive"
+            out = os.path.join(HOME, "samples", kind); os.makedirs(out, exist_ok=True)
+            u = mic.utterance(wait=2, end_silence=0.6, max_len=6)
+            if u is not None:
+                f = os.path.join(out, time.strftime("%Y%m%d-%H%M%S") + "-%03d.wav" % (int(time.time() * 1000) % 1000))
+                with open(f, "wb") as fh: fh.write(to_wav(u))
+                say("recorded %s sample %d (%.1f s)" % (kind, len(os.listdir(out)), u.size / RATE))
+            continue
+        b = mic.block(); s = wake.score(b)
+        peak = max(peak, float(np.sqrt(np.mean(b ** 2)))); best = max(best, s)
+        if time.time() - last >= 5:                       # diagnostics: how loud, how close to "Hey Felo"
+            if peak > 0.004 or a.level: say("heard: loudness %.3f, closest to Hey Felo %.2f" % (peak, best))
+            peak = best = 0.0; last = time.time()
         if a.level and s > 0.05: say("wake score %.2f" % s)
         if s < THRESHOLD: continue                            # not for Felo: nothing leaves the PC
         wake.reset(); beep("wake" if not paused else "no")
