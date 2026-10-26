@@ -172,3 +172,5 @@ then work on it only, and write its handoff when done.
 - **2026-10-05 tyxcrm on Felo core:** app + Postgres on felo-node-1, app launcher, nightly data backup + off-site. handoffs/2026-10-05-tyxcrm-on-felo-core.md
 
 - **2026-10-09 routine jobs on Gemma:** all 6 scheduled jobs are scripts + local Gemma (zero Claude); Claude only for chats, advisor, coding. handoffs/2026-10-09-gemma-for-routine-jobs.md
+
+- **2026-10-25:** business threads (status card + daily reports, branch business-view); Felo voice outage (edge-tts 7.3.1; box 101 fixed, box 100 voice-fix + sidecar rebuild); Hey Felo wake word training on felo-node-2. handoffs/2026-10-25-business-threads-voice-wakeword.md

@@ -8,7 +8,7 @@ Ideas Daniel pitches go to `IDEAS.md` — they are not worked on until they beco
 | PRJ-00 | Move from v1 to v2 + memory upgrade | **Done** (memory deploys waiting on Daniel's tap) | — |
 | PRJ-01 | Platform safety & reliability | **Done** (1.1–1.4, 2026-09-26; v1 leftovers after 2026-10-24) | — |
 | PRJ-02 | Build Studio — the Developer department | **Partly built**: Claude Code dev team, website playbook, check-site, previews, share links, proposals (2026-09-24/26). Left: QA reviewer, delivery to hosting | — |
-| PRJ-03 | Pilot client: Dogo Group (oil, energy & mining equipment) | **Active with Daniel**: pitch preview built + shared; proposal FGC-2026-0926-DGO started | — |
+| PRJ-03 | Pilot client: Dogo Group LLC (US) + Texas Supply SRL (AR) | **2026-10-17**: site preview (tabs) + back office phases 1-6 built and tested (109 tests). Waiting: client content, domain, Daniel go for deploy. See handoffs/2026-10-17-PRJ-03-dogo-backoffice.md | — |
 | PRJ-04 | Separate departments into dedicated agents | Planned | — |
 | PRJ-05 | Daily operations (email, calendar, CRM, files) | Planned | — |
 | PRJ-06 | Growth (sales, marketing, social, design, finance) | Planned | — |
