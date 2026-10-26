@@ -26,7 +26,8 @@ RATE = 16000
 BLOCK = 1280                                   # 80 ms, what the wake-word model reads
 HERE = os.path.dirname(os.path.abspath(__file__))
 MODEL = os.path.join(HERE, "hey_felo.onnx")
-THRESHOLD = 0.8                                # v3 (trained on Daniel's voice): his Hey Felo ~0.96, his normal speech <0.1
+THRESHOLD = 0.5                                # v3 (trained on Daniel's voice): his Hey Felo ~0.96, his normal speech <0.1;
+                                               # live tries scored 0.56-0.94, so 0.8 missed some (2026-10-26)
 STOP = re.compile(r"^\W*(?:stop|bye|goodbye|that'?s all|thanks|thank you|para|adi[oó]s|gracias|listo)\W*$", re.I)
 PAUSE = re.compile(r"\bstop listening\b|\bdeja de escuchar\b", re.I)
 RESUME = re.compile(r"\bstart listening\b|\bempieza a escuchar\b|\bescucha de nuevo\b", re.I)
@@ -61,7 +62,7 @@ def to_wav(pcm):
 def transcribe(pcm):
     if pcm is None: return ""
     try: return (felo("/api/hq/listen", to_wav(pcm), "audio/wav", 90).get("text") or "").strip()
-    except Exception as e: say("could not understand on Felo HQ: %s" % e); return ""
+    except Exception as e: say("could not understand on Felo HQ: %s" % e); beep("error"); return ""
 
 
 # ---------------- sound out ----------------
@@ -100,7 +101,8 @@ class Mic:
         self.stream = sd.InputStream(samplerate=RATE, channels=1, dtype="float32", blocksize=BLOCK, device=device, callback=self._cb)
         self.stream.start()
         vals = [float(np.sqrt(np.mean(self.q.get() ** 2))) for _ in range(12)]
-        self.floor = max(float(np.median(vals)), 0.002); say("microphone ready (noise level %.4f)" % self.floor)
+        self.floor = min(max(float(np.median(vals)), 0.002), 0.02)   # capped: a loud room at start made it deaf (0.083, 2026-10-26)
+        say("microphone ready (noise level %.4f)" % self.floor)
 
     def _cb(self, data, frames, t, status):
         if not self.muted.is_set():
