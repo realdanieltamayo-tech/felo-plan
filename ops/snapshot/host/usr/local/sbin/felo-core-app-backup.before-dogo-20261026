@@ -1,0 +1,16 @@
+#!/bin/bash
+# Proxmox host, nightly 04:10 (before the 04:30 off-site backup): back up the LIVE DATA of apps running on Felo core
+# (2026-10-05). The apps themselves are kept on Proxmox as releases; what only exists on Felo core is their data:
+#   tyxcrm: Postgres (pg_dump custom format, checked with pg_restore --list) + uploaded documents (felo-node-1)
+# Kept in /var/lib/felo-core-backups/<app>/ for 14 days; felo-offsite-backup sends that folder off-site.
+set -euo pipefail
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+B=/var/lib/felo-core-backups/tyxcrm; D=$(date +%Y-%m-%d); mkdir -p $B; chmod 700 /var/lib/felo-core-backups $B
+DB='c=$(docker ps -q --filter name=tyxcrm-db. | head -1); [ -n "$c" ] || { echo "tyxcrm-db is not running here" >&2; exit 1; }'
+ssh -o BatchMode=yes felo-node-1 "$DB; docker exec \$c pg_dump -U tyxcrm_owner -d tyxcrm -Fc" > $B/$D.dump.tmp
+ssh -o BatchMode=yes felo-node-1 "$DB; docker exec -i \$c pg_restore --list" < $B/$D.dump.tmp > /dev/null   # the dump reads back
+mv $B/$D.dump.tmp $B/$D.dump
+ssh -o BatchMode=yes felo-node-1 "tar -C /srv/tyxcrm -czf - uploads" > $B/$D-uploads.tar.gz.tmp && mv $B/$D-uploads.tar.gz.tmp $B/$D-uploads.tar.gz
+chmod 600 $B/$D.dump $B/$D-uploads.tar.gz
+find $B -maxdepth 1 -type f -mtime +14 -delete
+echo "tyxcrm: $(du -h $B/$D.dump | cut -f1) database, $(du -h $B/$D-uploads.tar.gz | cut -f1) documents; $(ls $B/*.dump | wc -l) days kept"

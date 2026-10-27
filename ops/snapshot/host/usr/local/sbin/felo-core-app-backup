@@ -14,3 +14,14 @@ ssh -o BatchMode=yes felo-node-1 "tar -C /srv/tyxcrm -czf - uploads" > $B/$D-upl
 chmod 600 $B/$D.dump $B/$D-uploads.tar.gz
 find $B -maxdepth 1 -type f -mtime +14 -delete
 echo "tyxcrm: $(du -h $B/$D.dump | cut -f1) database, $(du -h $B/$D-uploads.tar.gz | cut -f1) documents; $(ls $B/*.dump | wc -l) days kept"
+
+# dogo-backoffice (added 2026-10-26, PRJ-03): Postgres + documents on felo-node-2
+B=/var/lib/felo-core-backups/dogo; mkdir -p $B; chmod 700 $B
+DB='c=$(docker ps -q --filter name=dogo-db. | head -1); [ -n "$c" ] || { echo "dogo-db is not running here" >&2; exit 1; }'
+ssh -o BatchMode=yes felo-node-2 "$DB; docker exec \$c pg_dump -U dogo_owner -d dogo -Fc" > $B/$D.dump.tmp
+ssh -o BatchMode=yes felo-node-2 "$DB; docker exec -i \$c pg_restore --list" < $B/$D.dump.tmp > /dev/null   # the dump reads back
+mv $B/$D.dump.tmp $B/$D.dump
+ssh -o BatchMode=yes felo-node-2 "tar -C /srv/dogo -czf - documents" > $B/$D-documents.tar.gz.tmp && mv $B/$D-documents.tar.gz.tmp $B/$D-documents.tar.gz
+chmod 600 $B/$D.dump $B/$D-documents.tar.gz
+find $B -maxdepth 1 -type f -mtime +14 -delete
+echo "dogo: $(du -h $B/$D.dump | cut -f1) database, $(du -h $B/$D-documents.tar.gz | cut -f1) documents; $(ls $B/*.dump | wc -l) days kept"
