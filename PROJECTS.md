@@ -15,7 +15,7 @@ Ideas Daniel pitches go to `IDEAS.md` — they are not worked on until they beco
 | PRJ-07 | Leadership & autonomy (chief of staff, strategist, analytics) | Planned | — |
 | PRJ-08 | Client: Odalyake (paralegal office, immigration) | On hold | — |
 | PRJ-09 | Printing & artwork store (new business) | **Removed 2026-10-28** (Daniel deleted the print shop; replaced by PRJ-13) | — |
-| PRJ-13 | Store on zubaloop.com (physical products, shipped) | **Started 2026-10-28** — phase 13.1 | — |
+| PRJ-13 | Store on zubaloop.com (physical products, shipped) | **Started 2026-10-28** — 13.1 done; next 13.2 images | — |
 | PRJ-10 | THE REBUILD: real estate website + CRM | Planned | — |
 | PRJ-12 | Business dashboard (Felo HQ organized like the corporation) + proactive Felo + voice + neural look | **Done 2026-09-27** | — |
 | PRJ-11 | Business supervisors: one Felo agent per business, reporting to Felo | **Built 2026-09-26** (lite for 4 businesses; full for income businesses) | — |
@@ -62,7 +62,7 @@ Website selling printing services (business cards etc.) and artworks. Order flow
 ## PRJ-13 Store on zubaloop.com
 Started 2026-10-28 (Daniel). Physical products, shipped. The company site moved to zubaloop.com on 2026-10-28 (handoff /root/handoffs/2026-10-28-company-site-to-zubaloop.md on the Proxmox host); the old print shop and all its code were deleted the same day.
 Decisions (Daniel, 2026-10-28): store lives at zubaloop.com/store; our own cart and checkout (not Stripe Payment Links) with Stripe card payment; shipping only; a store dashboard in Felo HQ to track orders and shipping addresses; Daniel sends the product list, Claude researches market prices; product images made with the Felo Studio engine.
-- **13.1 Products + prices** — Daniel's list → market price research per product → priced catalog Daniel approves.
+- **13.1 Products + prices** — **done 2026-10-28**: 3 builds (Felo Core 5070 $2,299, Felo Pro 5080 $3,699, Felo Max 5090 $8,499) + used tested RTX 4090 $2,599 / 4080 $1,149; no new standalone cards. Handoff: handoffs/2026-10-28-PRJ-13-13.1-products-prices.md.
 - **13.2 Product images** — made with the Felo Studio engine (how: agree with the Studio session; Studio's own infra is not touched from this project).
 - **13.3 Store pages + cart** — zubaloop.com/store, product pages, cart; built as a preview first.
 - **13.4 Order service on core** — small service (checkout with shipping address, Stripe webhook, order storage, Tailscale-only admin API); Stripe keys only via a hidden-paste script.
