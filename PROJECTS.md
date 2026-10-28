@@ -8,13 +8,14 @@ Ideas Daniel pitches go to `IDEAS.md` — they are not worked on until they beco
 | PRJ-00 | Move from v1 to v2 + memory upgrade | **Done** (memory deploys waiting on Daniel's tap) | — |
 | PRJ-01 | Platform safety & reliability | **Done** (1.1–1.4, 2026-09-26; v1 leftovers after 2026-10-24) | — |
 | PRJ-02 | Build Studio — the Developer department | **Partly built**: Claude Code dev team, website playbook, check-site, previews, share links, proposals (2026-09-24/26). Left: QA reviewer, delivery to hosting | — |
-| PRJ-03 | Pilot client: Dogo Group LLC (US) + Texas Supply SRL (AR) | **2026-10-17**: site preview (tabs) + back office phases 1-6 built and tested (109 tests). Waiting: client content, domain, Daniel go for deploy. See handoffs/2026-10-17-PRJ-03-dogo-backoffice.md | — |
+| PRJ-03 | Pilot client: Dogo Group LLC (US) + Texas Supply SRL (AR) | **LIVE 2026-10-26** at dogo-group.com + app.dogo-group.com (core, felo-node-2, nightly backup). Waiting: client content, mailboxes, invoice tax data. See handoffs/2026-10-26-PRJ-03-dogo-live.md | — |
 | PRJ-04 | Separate departments into dedicated agents | Planned | — |
 | PRJ-05 | Daily operations (email, calendar, CRM, files) | Planned | — |
 | PRJ-06 | Growth (sales, marketing, social, design, finance) | Planned | — |
 | PRJ-07 | Leadership & autonomy (chief of staff, strategist, analytics) | Planned | — |
 | PRJ-08 | Client: Odalyake (paralegal office, immigration) | On hold | — |
-| PRJ-09 | Printing & artwork store (new business) | Planned | — |
+| PRJ-09 | Printing & artwork store (new business) | **Removed 2026-10-28** (Daniel deleted the print shop; replaced by PRJ-13) | — |
+| PRJ-13 | Store on zubaloop.com (physical products, shipped) | **Started 2026-10-28** — phase 13.1 | — |
 | PRJ-10 | THE REBUILD: real estate website + CRM | Planned | — |
 | PRJ-12 | Business dashboard (Felo HQ organized like the corporation) + proactive Felo + voice + neural look | **Done 2026-09-27** | — |
 | PRJ-11 | Business supervisors: one Felo agent per business, reporting to Felo | **Built 2026-09-26** (lite for 4 businesses; full for income businesses) | — |
@@ -57,6 +58,17 @@ See ROADMAP.md (phases P2–P4 of the published roadmap).
 
 ## PRJ-09 Printing & artwork store
 Website selling printing services (business cards etc.) and artworks. Order flow (Daniel): client orders → order on our dashboard → email design + measurements to the printing warehouse (never our price) → warehouse emails our cost → we pay → pick up → ship → client gets tracking → repeat. Daniel has a basic structure. Built by the Build Studio (step 7); Felo's printing supervisor runs the order flow.
+
+## PRJ-13 Store on zubaloop.com
+Started 2026-10-28 (Daniel). Physical products, shipped. The company site moved to zubaloop.com on 2026-10-28 (handoff /root/handoffs/2026-10-28-company-site-to-zubaloop.md on the Proxmox host); the old print shop and all its code were deleted the same day.
+Decisions (Daniel, 2026-10-28): store lives at zubaloop.com/store; our own cart and checkout (not Stripe Payment Links) with Stripe card payment; shipping only; a store dashboard in Felo HQ to track orders and shipping addresses; Daniel sends the product list, Claude researches market prices; product images made with the Felo Studio engine.
+- **13.1 Products + prices** — Daniel's list → market price research per product → priced catalog Daniel approves.
+- **13.2 Product images** — made with the Felo Studio engine (how: agree with the Studio session; Studio's own infra is not touched from this project).
+- **13.3 Store pages + cart** — zubaloop.com/store, product pages, cart; built as a preview first.
+- **13.4 Order service on core** — small service (checkout with shipping address, Stripe webhook, order storage, Tailscale-only admin API); Stripe keys only via a hidden-paste script.
+- **13.5 Felo HQ store dashboard** — orders, status, shipping addresses, tracking numbers; ships through Daniel's Deploy tap.
+- **13.6 Go live** — Daniel adds the Stripe webhook, test order end to end.
+One phase at a time; handoff after each.
 
 ## PRJ-10 THE REBUILD
 Daniel's real estate business (realtamayo.com): website now, CRM later; a Felo supervisor for it.
