@@ -67,7 +67,7 @@ Decisions (Daniel, 2026-10-28): store lives at zubaloop.com/store; our own cart 
 - **13.3 Store pages + cart** — zubaloop.com/store, product pages, cart; built as a preview first. **LIVE 2026-10-29** at https://zubaloop.com/store/ (checkout by email until 13.4). Handoff: handoffs/2026-10-29-PRJ-13-13.3-store-pages-preview.md.
 - **13.4 Order service on core** — small service (checkout with shipping address, Stripe webhook, order storage, Tailscale-only admin API); Stripe keys only via a hidden-paste script. **Done 2026-10-29** (felo-store, waiting for Stripe keys; checkout off). Handoff: handoffs/2026-10-29-PRJ-13-13.4-order-service.md.
 - **13.5 Felo HQ store dashboard** — orders, status, shipping addresses, tracking numbers; ships through Daniel's Deploy tap. **Built 2026-10-29**, branch store-dashboard waiting for the Deploy tap. Handoff: handoffs/2026-10-29-PRJ-13-13.5-felo-hq-store-dashboard.md.
-- **13.6 Go live** — Daniel adds the Stripe webhook, test order end to end.
+- **13.6 Go live** — Daniel adds the Stripe webhook, test order end to end. **Postponed 2026-10-29**: orders by email to info@felostudio.com + Stripe payment link sent by Daniel, until he asks for card checkout.
 One phase at a time; handoff after each.
 
 ## PRJ-10 THE REBUILD
