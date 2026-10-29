@@ -15,7 +15,7 @@ Ideas Daniel pitches go to `IDEAS.md` — they are not worked on until they beco
 | PRJ-07 | Leadership & autonomy (chief of staff, strategist, analytics) | Planned | — |
 | PRJ-08 | Client: Odalyake (paralegal office, immigration) | On hold | — |
 | PRJ-09 | Printing & artwork store (new business) | **Removed 2026-10-28** (Daniel deleted the print shop; replaced by PRJ-13) | — |
-| PRJ-13 | Store on zubaloop.com (physical products, shipped) | **Started 2026-10-28** — 13.1 done; 13.2 partly (3 card images missing); 13.3 preview built | — |
+| PRJ-13 | Store on zubaloop.com (physical products, shipped) | **Started 2026-10-28** — 13.1 done; 13.2 partly (3 card images missing); 13.3 live; next 13.4 order service | — |
 | PRJ-10 | THE REBUILD: real estate website + CRM | Planned | — |
 | PRJ-12 | Business dashboard (Felo HQ organized like the corporation) + proactive Felo + voice + neural look | **Done 2026-09-27** | — |
 | PRJ-11 | Business supervisors: one Felo agent per business, reporting to Felo | **Built 2026-09-26** (lite for 4 businesses; full for income businesses) | — |
@@ -64,7 +64,7 @@ Started 2026-10-28 (Daniel). Physical products, shipped. The company site moved 
 Decisions (Daniel, 2026-10-28): store lives at zubaloop.com/store; our own cart and checkout (not Stripe Payment Links) with Stripe card payment; shipping only; a store dashboard in Felo HQ to track orders and shipping addresses; Daniel sends the product list, Claude researches market prices; product images made with the Felo Studio engine.
 - **13.1 Products + prices** — **done 2026-10-28**: 3 builds (Felo Core 5070 $2,299, Felo Pro 5080 $3,699, Felo Max 5090 $8,499) + used tested RTX 4090 $2,599 / 4080 $1,149 + new RTX 5070 $949 / 5080 $1,699 / 5090 $5,599. Handoff: handoffs/2026-10-28-PRJ-13-13.1-products-prices.md.
 - **13.2 Product images** — made with the Felo Studio engine (how: agree with the Studio session; Studio's own infra is not touched from this project). **In progress**: 4 of 8 saved; AI images + an email-us-for-more-info link on every product (Daniel).
-- **13.3 Store pages + cart** — zubaloop.com/store, product pages, cart; built as a preview first. **Preview built 2026-10-29** (http://100.87.6.99:8099/store/, Tailscale), waiting on Daniel's OK to publish. Handoff: handoffs/2026-10-29-PRJ-13-13.3-store-pages-preview.md.
+- **13.3 Store pages + cart** — zubaloop.com/store, product pages, cart; built as a preview first. **LIVE 2026-10-29** at https://zubaloop.com/store/ (checkout by email until 13.4). Handoff: handoffs/2026-10-29-PRJ-13-13.3-store-pages-preview.md.
 - **13.4 Order service on core** — small service (checkout with shipping address, Stripe webhook, order storage, Tailscale-only admin API); Stripe keys only via a hidden-paste script.
 - **13.5 Felo HQ store dashboard** — orders, status, shipping addresses, tracking numbers; ships through Daniel's Deploy tap.
 - **13.6 Go live** — Daniel adds the Stripe webhook, test order end to end.
