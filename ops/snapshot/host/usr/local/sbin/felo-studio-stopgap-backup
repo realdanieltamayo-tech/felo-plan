@@ -1,0 +1,14 @@
+#!/bin/sh
+# Felo Studio stopgap nightly copy to the Proxmox 8 TB disk, while the Hostinger off-site host is down
+# and until the B2 backup is set up (Daniel's OK 2026-11-11). Remove this and its cron.d file once B2 works.
+# Database: consistent SQLite snapshot, 14 dated copies kept. Files: mirrored without deleting anything.
+set -eu
+D=/mnt/bulk8t/backups/felo-studio-stopgap; mkdir -p $D/data && chmod 700 $D
+T=$(date +%Y%m%d)
+ssh core 'docker exec felo-studio python -c "import sqlite3;s=sqlite3.connect(\"/data/studio.db\");d=sqlite3.connect(\"/data/studio-copy.db\");s.backup(d);d.close()"'
+rsync -a core:/data/felo-studio/studio-copy.db $D/studio-$T.db
+ssh core 'rm -f /data/felo-studio/studio-copy.db'
+[ "$(sqlite3 $D/studio-$T.db 'pragma integrity_check')" = ok ] || { echo "$(date -Is) FAIL database check"; exit 1; }
+rsync -a --exclude 'studio.db*' --exclude studio-copy.db core:/data/felo-studio/ $D/data/
+ls -1t $D/studio-*.db | tail -n +15 | xargs -r rm -f
+echo "$(date -Is) ok $(du -sh $D | cut -f1)"
