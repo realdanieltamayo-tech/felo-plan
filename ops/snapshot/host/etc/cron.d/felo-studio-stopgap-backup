@@ -1,2 +1,0 @@
-PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-40 3 * * * root /usr/local/bin/felo-ran studio-stopgap-backup /usr/local/sbin/felo-studio-stopgap-backup >> /var/log/felo-studio-stopgap-backup.log 2>&1

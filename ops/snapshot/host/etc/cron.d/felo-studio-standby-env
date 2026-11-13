@@ -1,0 +1,3 @@
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# Keep felo-node-2's Studio standby on the same settings and release as core
+*/5 * * * * root /usr/local/sbin/felo-studio-standby-env >> /var/log/felo-studio-standby-env.log 2>&1

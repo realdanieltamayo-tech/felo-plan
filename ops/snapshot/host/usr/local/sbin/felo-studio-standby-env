@@ -1,0 +1,12 @@
+#!/bin/sh
+# [Proxmox] Copy core's Studio .env to felo-node-2's standby when it changes, and pre-pull the same images there.
+set -eu
+T=$(mktemp); trap 'rm -f $T' EXIT
+ssh core 'sudo cat /data/services/felo-studio/.env' > $T 2>/dev/null || exit 0   # core down: keep what node-2 has
+[ -s $T ] || exit 0
+if ! ssh felo-node-2 'sudo cat /srv/felo-studio-standby/.env 2>/dev/null' | cmp -s - $T; then
+  ssh felo-node-2 'sudo sh -c "umask 077; cat > /srv/felo-studio-standby/.env"' < $T
+  TAG=$(sed -n 's/^STUDIO_TAG=//p' $T)
+  ssh felo-node-2 "docker pull -q core.tail0ff06a.ts.net:5443/felo-studio:$TAG >/dev/null && docker pull -q core.tail0ff06a.ts.net:5443/felo-studio-web:$TAG >/dev/null"
+  echo "$(date -Is) standby updated to $TAG"
+fi
