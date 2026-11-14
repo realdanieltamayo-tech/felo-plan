@@ -1,0 +1,8 @@
+#!/bin/sh
+# [Proxmox] Interim fence while B2 is blocked: if node-2 runs Studio, core must not. Every minute.
+set -u
+ssh -o ConnectTimeout=8 felo-node-2 'docker ps -q -f name=^felo-studio$' 2>/dev/null | grep -q . || exit 0
+ssh -o ConnectTimeout=8 core 'docker ps -q -f name=^felo-studio$' 2>/dev/null | grep -q . || exit 0
+echo "$(date '+%F %T') node-2 runs Studio and core came back: stopping Studio on core, forwarding felostudio.com to node-2"
+ssh core 'sudo touch /etc/felo/studio-takeover-fenced; docker update --restart=no felo-studio felo-studio-web >/dev/null; docker stop felo-studio felo-studio-web >/dev/null;
+  docker run -d --name felo-studio-forward --restart unless-stopped -p 127.0.0.1:8098:8098 core.tail0ff06a.ts.net:5443/socat:1.8.0.1 tcp-listen:8098,fork,reuseaddr tcp:100.107.210.26:8098 >/dev/null'

@@ -1,0 +1,5 @@
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# Interim (B2 storage cap, 2026-11-13): keep felo-node-2's Studio standby fresh through Proxmox, and fence core after a takeover.
+# Replace with Litestream + B2 sync once Daniel's company card is on Backblaze.
+*/5 * * * * root flock -n /run/felo-studio-standby-feed.lock /usr/local/sbin/felo-studio-standby-feed >> /var/log/felo-studio-standby-feed.log 2>&1
+* * * * * root /usr/local/sbin/felo-studio-fence-proxmox >> /var/log/felo-studio-fence.log 2>&1

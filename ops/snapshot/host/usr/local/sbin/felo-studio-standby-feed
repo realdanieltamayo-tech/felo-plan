@@ -1,0 +1,12 @@
+#!/bin/sh
+# [Proxmox] Interim feed for the Studio standby on felo-node-2 while B2 uploads are blocked (storage cap, 2026-11-13).
+# Every 5 minutes: consistent database snapshot + changed files, core -> Proxmox -> node-2. Remove once Litestream runs.
+set -eu
+S=/mnt/bulk8t/backups/felo-studio-live; mkdir -p $S/data && chmod 700 $S
+ssh felo-node-2 'docker ps -q -f name=^felo-studio$' | grep -q . && exit 0   # node-2 is live: it's the source now
+ssh core 'docker exec felo-studio python -c "import sqlite3;s=sqlite3.connect(\"/data/studio.db\");d=sqlite3.connect(\"/data/studio-feed.db\");s.backup(d);d.close()"'
+rsync -a core:/data/felo-studio/studio-feed.db $S/studio.db.new && mv $S/studio.db.new $S/data/studio.db
+ssh core 'rm -f /data/felo-studio/studio-feed.db'
+rsync -a --exclude 'studio.db*' --exclude 'studio-*.db' core:/data/felo-studio/ $S/data/
+rsync -a $S/data/ felo-node-2:/srv/felo-studio-standby/data/
+echo "$(date '+%F %T') fed standby ($(du -sh $S/data | cut -f1))"

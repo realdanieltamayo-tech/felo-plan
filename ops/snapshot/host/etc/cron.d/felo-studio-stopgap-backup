@@ -1,0 +1,3 @@
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# Back on 2026-11-13: B2 storage cap reached until Daniel adds the company card. Remove once B2 uploads work again.
+40 3 * * * root /usr/local/bin/felo-ran studio-stopgap-backup /usr/local/sbin/felo-studio-stopgap-backup >> /var/log/felo-studio-stopgap-backup.log 2>&1
